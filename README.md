@@ -13,10 +13,10 @@
 ## 開発体制
 
 ```text
-副院長（要求提供）→ 殿（エンジニア）→ 将軍システム（org-shogun）→ このリポジトリ
+副院長（要求提供）→ プロジェクトオーナー（エンジニア）→ AIエージェントシステム（org-shogun）→ このリポジトリ
 ```
 
-- PRの最終承認者: 殿
+- PRの最終承認者: プロジェクトオーナー
 - 副院長: 要求事項の提供者（技術的PRレビューは行わない）
 
 ## ディレクトリ構成
@@ -98,5 +98,5 @@ clinic-shift-scheduler/
 
 ## 関連リポジトリ
 
-- [org-shogun](https://github.com/kumagoro1202/org-shogun) — マルチエージェント将軍システム
+- [org-shogun](https://github.com/kumagoro1202/org-shogun) — マルチエージェントAIエージェントシステム
 - [shift-scheduler-claude](https://github.com/kumanoGoro/shift-scheduler-claude) — シフト作成システム v1（旧）
