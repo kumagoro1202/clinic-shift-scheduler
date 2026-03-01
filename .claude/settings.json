@@ -1,0 +1,8 @@
+{
+  "project": "clinic-shift-scheduler",
+  "description": "クリニック向けシフト作成システム v2",
+  "git": {
+    "account": "kumagoro1202",
+    "email": "kumagoro1202@users.noreply.github.com"
+  }
+}

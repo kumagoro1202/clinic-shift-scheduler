@@ -1,0 +1,25 @@
+# ローカル設定
+.claude/settings.local.json
+
+# 言語別（実装言語確定後に更新）
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+dist/
+*.egg-info/
+
+# Node.js
+node_modules/
+.npm
+
+# Java
+target/
+*.class
+*.jar
+
+# 共通
+.DS_Store
+*.log
+.env
+.env.local

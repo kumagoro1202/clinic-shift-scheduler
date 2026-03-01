@@ -1,0 +1,8 @@
+# False Positive 除外リスト
+# このファイルの変更はPRを通すこと（直接mainコミット禁止）
+# 変更理由をコメントで明記すること
+
+# GitHub Actions / Git関連のメールアドレス（技術用途）
+noreply@anthropic.com
+noreply@github.com
+actions@github.com

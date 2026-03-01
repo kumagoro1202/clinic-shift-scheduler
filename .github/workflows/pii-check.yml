@@ -1,0 +1,90 @@
+name: PII Check
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  pii-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pcregrep
+        run: sudo apt-get install -y pcregrep
+
+      - name: Load PII patterns and scan
+        run: |
+          set +e
+          FAIL=0
+
+          PATTERNS_FILE="scripts/pii-patterns.txt"
+          BLOCKLIST_FILE="scripts/names-blocklist.txt"
+          ALLOWLIST_FILE="scripts/allowlist.txt"
+
+          SCAN_INCLUDES='--include=*.md --include=*.py --include=*.ts \
+            --include=*.js --include=*.yaml --include=*.yml --include=*.json'
+          SCAN_EXCLUDES='--exclude-dir=.git --exclude-dir=node_modules \
+            --exclude-dir=.venv --exclude-dir=target'
+
+          # パターンファイルから正規表現を読み込んでスキャン
+          if [ -f "$PATTERNS_FILE" ]; then
+            while IFS= read -r pattern || [ -n "$pattern" ]; do
+              # コメント行・空行をスキップ
+              [[ "$pattern" =~ ^#.*$ ]] && continue
+              [[ -z "$pattern" ]] && continue
+
+              result=$(pcregrep -rn "$pattern" \
+                $SCAN_INCLUDES $SCAN_EXCLUDES . 2>/dev/null || true)
+
+              if [ -n "$result" ]; then
+                # allowlistで除外
+                if [ -f "$ALLOWLIST_FILE" ]; then
+                  while IFS= read -r allowed; do
+                    [[ "$allowed" =~ ^#.*$ ]] && continue
+                    result=$(echo "$result" | grep -v "$allowed" || true)
+                  done < "$ALLOWLIST_FILE"
+                fi
+
+                if [ -n "$result" ]; then
+                  echo "::warning::PII pattern detected: $pattern"
+                  echo "$result"
+                  FAIL=1
+                fi
+              fi
+            done < "$PATTERNS_FILE"
+          fi
+
+          # 姓ブロックリストによるスキャン
+          if [ -f "$BLOCKLIST_FILE" ]; then
+            while IFS= read -r surname || [ -n "$surname" ]; do
+              [[ "$surname" =~ ^#.*$ ]] && continue
+              [[ -z "$surname" ]] && continue
+
+              result=$(pcregrep -rn "$surname" \
+                $SCAN_INCLUDES $SCAN_EXCLUDES . 2>/dev/null || true)
+
+              if [ -n "$result" ]; then
+                # allowlistで除外
+                if [ -f "$ALLOWLIST_FILE" ]; then
+                  while IFS= read -r allowed; do
+                    [[ "$allowed" =~ ^#.*$ ]] && continue
+                    result=$(echo "$result" | grep -v "$allowed" || true)
+                  done < "$ALLOWLIST_FILE"
+                fi
+
+                if [ -n "$result" ]; then
+                  echo "::warning::Surname detected: $surname"
+                  echo "$result"
+                  FAIL=1
+                fi
+              fi
+            done < "$BLOCKLIST_FILE"
+          fi
+
+          if [ $FAIL -ne 0 ]; then
+            echo "::error::PII detected. See CLAUDE.md for anonymization rules."
+            exit 1
+          fi
+
+          echo "✅ No PII patterns detected."
