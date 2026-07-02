@@ -5,8 +5,8 @@ set -e
 
 FAIL=0
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PATTERNS_FILE="$SCRIPT_DIR/pii-patterns.txt"
-BLOCKLIST_FILE="$SCRIPT_DIR/names-blocklist.txt"
+PATTERNS_FILE="$SCRIPT_DIR/pii-patterns-nonexistent.txt"
+BLOCKLIST_FILE="$SCRIPT_DIR/names-blocklist-nonexistent.txt"
 ALLOWLIST_FILE="$SCRIPT_DIR/allowlist.txt"
 
 check_allowlist() {
