@@ -110,6 +110,47 @@ git config user.email  # → kumagoro1202@users.noreply.github.com
 | メジャーバージョン依存更新 | ❌ プロジェクトオーナーの確認必須 |
 | 機能追加・バグ修正 | ❌ プロジェクトオーナーの確認必須 |
 
-## 言語別開発ルール（実装言語決定後に追記）
+## 言語別開発ルール（Python）
 
-（実装言語選定後に更新予定）
+技術スタックの決定内容と根拠は `01-docs/adr/ADR-008-tech-stack.md` を参照。
+
+### Python バージョン・仮想環境
+
+- **Python 3.12 を開発基準バージョン**とする（3.x 系の最新安定版に追随可）
+- 依存パッケージは必ず**リポジトリ直下の仮想環境 `.venv/`** にインストールする
+  （システム Python への直接インストール禁止）
+
+```bash
+# 初回セットアップ
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+```
+
+### テスト実行・カバレッジ
+
+- テストは pytest + pytest-cov で実行する
+- 新規コードのカバレッジは **80% 以上**（本文書「テストルール」参照）
+- **SKIP=FAIL 厳守**: SKIP されたテストが 1 件でもあれば「テスト未完了」扱いとし、
+  完了と報告してはならない
+
+```bash
+# テスト実行（カバレッジ計測付き）
+.venv/bin/python -m pytest 03-tests/ --cov=02-src/scheduler --cov-report=term
+```
+
+### OR-Tools CP-SAT の利用方針
+
+- 最適化ソルバーは **OR-Tools CP-SAT** を使用する（`ortools.sat.python.cp_model`）
+- `requirements.txt` で下限バージョンを固定する（現行: `ortools>=9.10`。
+  動作確認済みバージョンは 9.15 系）
+- OR-Tools のメジャー更新時は、全テスト PASS（SKIP 0 件）を確認してから
+  `requirements.txt` を更新する（自動マージルールの「メジャーバージョン依存更新」に準拠）
+- ソルバーのタイムアウトは呼び出し側で必ず指定する（非機能要件: 60 秒以内。
+  タイムアウト時は部分解 = FEASIBLE 解を使用）
+
+### 依存関係管理
+
+- 依存パッケージは **`requirements.txt` で一元管理**する（pip 直接インストールで
+  済ませて requirements.txt への記載を忘れることを禁止）
+- 新規依存の追加は PR で行い、追加理由を PR 本文に明記する
+- 依存は最小限に保つ（現行: ortools / pyyaml / pytest 系のみ）

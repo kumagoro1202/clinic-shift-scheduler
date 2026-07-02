@@ -13,6 +13,7 @@ Architecture Decision Records（アーキテクチャ決定記録）
 | [ADR-005](./ADR-005-ai-cross-review-criteria.md) | AIクロスレビューの運用基準 | 承認済み | 2026-03-01 |
 | [ADR-006](./ADR-006-dev-team-pr-flow.md) | 開発体制・PR承認フローの確立 | 承認済み | 2026-03-01 |
 | [ADR-007](./ADR-007-pii-protection-multilayer.md) | 個人情報保護多層防御の採用 | 承認済み | 2026-03-01 |
+| [ADR-008](./ADR-008-tech-stack.md) | 実装言語・技術スタックの選定 | 承認済み | 2026-07-03 |
 
 ## ADRテンプレート
 
