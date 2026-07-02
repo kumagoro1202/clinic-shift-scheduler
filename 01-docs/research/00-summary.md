@@ -46,6 +46,7 @@
 3. **昼休憩カバーのローテーション**: 昼休憩中も受付を絶やさないためのカバー制約が必要
 
 **除外できる要素（日勤のみのため完全不要）**:
+
 - 夜勤インターバル制約（夜勤終業〜次勤務11時間以上）
 - 夜勤後翌日休み保証
 - 連続夜勤禁止
@@ -69,6 +70,7 @@
 | **日勤クリニック適合度** | ◎◎◎ |
 
 **選定理由**:
+
 1. **公式ナーススケジューリングサンプルあり**: `shift_scheduling_sat.py`（看護師スケジューリングの完全実装例）を公式提供。日勤への適用はさらにシンプル
 2. **業界最高水準の性能**: 日勤クリニック（20〜50名・1ヶ月分）なら数秒以内に最適解を算出
 3. **軟制約の記述が自然**: 希望休などの重み付けを`model.maximize()`で統一的に扱える
@@ -101,11 +103,13 @@ for s in range(num_staff):
 | **日勤クリニック適合度** | ◎◎ |
 
 **選定理由**:
+
 1. **既存コードを維持**: リファクタリング不要で即日適用可能
 2. **ソルバー切り替えのみで高速化**: CBCからHiGHSに変えるだけで2〜5倍の速度改善
 3. **日勤のみ規模では十分**: 看護課追加後も1ヶ月分の計算が数秒〜数十秒以内に完了する見通し
 
 **改善実装（1行変更）**:
+
 ```python
 # 変更前（CBC）
 prob.solve(PULP_CBC_CMD())
@@ -127,6 +131,7 @@ prob.solve(HiGHS_CMD())
 | **日勤クリニック適合度** | ◎（Java環境前提） |
 
 **選定理由**:
+
 1. **シフトスケジューリング専用の公式サンプル**: Employee Shift Schedulingのクイックスタートが最も充実
 2. **リアルタイム再スケジューリング**: 急な欠勤への当日対応に強い
 3. **日勤のみ設定でも完全動作**: 夜勤機能を使わなければ日勤のみのシンプルな運用が可能
@@ -222,7 +227,7 @@ prob.solve(HiGHS_CMD())
 
 ### 6.2 優先度付きロードマップ案
 
-```
+```text
 Phase 1（即時・低リスク）
   ├─ [1日以内] CBCソルバーをHiGHSに切り替え（1行変更・2〜5倍高速化）
   ├─ [1ヶ月以内] 看護課シフトの追加（スキル制約・配置制約の拡張）
@@ -236,7 +241,7 @@ Phase 2（中期・スタッフUX改善）
 Phase 3（長期・アーキテクチャ進化）
   ├─ OR-Tools CP-SATへの段階的移行（軟制約の記述改善・スケール対応）
   ├─ LLMによる自然言語制約入力UI
-  │    例: 「田中さんは今週水曜午後を休みに」→ 自動制約変換
+  │    例: 「スタッフAは今週水曜午後を休みに」→ 自動制約変換
   └─ リアルタイム再スケジューリング機能（急な欠勤への当日対応）
 ```
 
@@ -259,16 +264,16 @@ Phase 3（長期・アーキテクチャ進化）
 
 | 順位 | 資料名 | URL | 活用シーン |
 |-----|--------|-----|-----------|
-| **1** | Google OR-Tools: Employee Scheduling（公式） | https://developers.google.com/optimization/scheduling/employee_scheduling | CP-SAT実装の起点。看護師スケジューリングのサンプルが豊富 |
-| **2** | shift_scheduling_sat.py（OR-Tools GitHub） | https://github.com/google/or-tools/blob/stable/examples/python/shift_scheduling_sat.py | 本番レベルのPython実装例。制約モデリングのベストプラクティスが凝縮 |
-| **3** | Healthcare Scheduling in Optimization（PMC 2021） | https://pmc.ncbi.nlm.nih.gov/articles/PMC8035616/ | 外来クリニック含む医療スケジューリングの包括的レビュー |
-| **4** | Pareto-Optimal Workforce Scheduling（Springer 2025） | https://link.springer.com/article/10.1007/s12351-025-00903-7 | スキル×希望の多目的最適化。看護課実装に直接活用可能 |
-| **5** | Fairness in Collaborative Shift Scheduling（CHI 2020） | https://dl.acm.org/doi/fullHtml/10.1145/3313831.3376656 | 公平性の4次元フレームワーク。UI設計指針にも活用可能 |
-| **6** | 整数計画ソルバーでシフトスケジューリング（Zenn） | https://zenn.dev/umepon/articles/5aef89c5c348de | 日本語で読める最も実践的な実装記事。PuLPで即実行可能 |
-| **7** | Personalized Staff-Scheduling with WLB（PMC 2023） | https://pmc.ncbi.nlm.nih.gov/articles/PMC9972317/ | 個人希望×ワークライフバランスの設計思想。日勤クリニックと完全一致 |
-| **8** | Medical Staff Scheduling with Multi-skills（PMC 2023） | https://pmc.ncbi.nlm.nih.gov/articles/PMC10454947/ | マルチスキル制約のモデリングパターン。外来クリニックの業務別スキル管理に直接応用可能 |
-| **9** | Integrating Nurse Preferences Into AI Scheduling（JMIR 2025） | https://pmc.ncbi.nlm.nih.gov/articles/PMC12157959/ | AI+NLPでスタッフ希望を吸い上げる最新アプローチ。Phase3参考 |
-| **10** | 訪問介護シフトスケジューリングモデル（BM SMS社） | https://tech.bm-sms.co.jp/entry/2023/03/28/120000 | 日本の医療・介護業界での実務事例。日本の法規制（労基・有給）が参考になる |
+| **1** | Google OR-Tools: Employee Scheduling（公式） | <https://developers.google.com/optimization/scheduling/employee_scheduling> | CP-SAT実装の起点。看護師スケジューリングのサンプルが豊富 |
+| **2** | shift_scheduling_sat.py（OR-Tools GitHub） | <https://github.com/google/or-tools/blob/stable/examples/python/shift_scheduling_sat.py> | 本番レベルのPython実装例。制約モデリングのベストプラクティスが凝縮 |
+| **3** | Healthcare Scheduling in Optimization（PMC 2021） | <https://pmc.ncbi.nlm.nih.gov/articles/PMC8035616/> | 外来クリニック含む医療スケジューリングの包括的レビュー |
+| **4** | Pareto-Optimal Workforce Scheduling（Springer 2025） | <https://link.springer.com/article/10.1007/s12351-025-00903-7> | スキル×希望の多目的最適化。看護課実装に直接活用可能 |
+| **5** | Fairness in Collaborative Shift Scheduling（CHI 2020） | <https://dl.acm.org/doi/fullHtml/10.1145/3313831.3376656> | 公平性の4次元フレームワーク。UI設計指針にも活用可能 |
+| **6** | 整数計画ソルバーでシフトスケジューリング（Zenn） | <https://zenn.dev/umepon/articles/5aef89c5c348de> | 日本語で読める最も実践的な実装記事。PuLPで即実行可能 |
+| **7** | Personalized Staff-Scheduling with WLB（PMC 2023） | <https://pmc.ncbi.nlm.nih.gov/articles/PMC9972317/> | 個人希望×ワークライフバランスの設計思想。日勤クリニックと完全一致 |
+| **8** | Medical Staff Scheduling with Multi-skills（PMC 2023） | <https://pmc.ncbi.nlm.nih.gov/articles/PMC10454947/> | マルチスキル制約のモデリングパターン。外来クリニックの業務別スキル管理に直接応用可能 |
+| **9** | Integrating Nurse Preferences Into AI Scheduling（JMIR 2025） | <https://pmc.ncbi.nlm.nih.gov/articles/PMC12157959/> | AI+NLPでスタッフ希望を吸い上げる最新アプローチ。Phase3参考 |
+| **10** | 訪問介護シフトスケジューリングモデル（BM SMS社） | <https://tech.bm-sms.co.jp/entry/2023/03/28/120000> | 日本の医療・介護業界での実務事例。日本の法規制（労基・有給）が参考になる |
 
 ---
 
