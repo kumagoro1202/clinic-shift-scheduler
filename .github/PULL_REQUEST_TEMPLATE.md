@@ -1,3 +1,4 @@
+<!-- markdownlint-disable-file MD041 -->
 ## 概要
 
 <!-- 変更内容を簡潔に記述してください -->

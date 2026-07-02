@@ -15,16 +15,16 @@
 
 | # | タイトル | 著者 | 年 | 日勤適用可能性 | URL |
 |---|----------|------|----|----------------|-----|
-| 1 | Staff scheduling and rostering: A review of applications, methods and models | Ernst, Jiang, Krishnamoorthy, Sier | 2004 | ★★★★☆ | https://www.sciencedirect.com/science/article/abs/pii/S0377221709003968 |
-| 2 | The state of the art of nurse rostering | Burke, De Causmaecker, Vanden Berghe, Van Landeghem | 2004 | ★★★★☆ | https://link.springer.com/article/10.1007/s10732-008-9099-6 |
-| 3 | A Survey of the Nurse Rostering Solution Methodologies: The State-of-the-Art and Emerging Trends | 複数著者 | 2022 | ★★★★☆ | https://www.researchgate.net/publication/360821639 |
-| 4 | Machine Learning and Constraint Programming for Efficient Healthcare Scheduling | 複数著者 | 2024 | ★★★☆☆ | https://arxiv.org/pdf/2409.07547 |
-| 5 | Integrating Nurse Preferences Into AI-Based Scheduling Systems | 複数著者 | 2025 | ★★★★★ | https://pmc.ncbi.nlm.nih.gov/articles/PMC12157959/ |
-| 6 | Optimizing Nurse Rostering: A Case Study Using Integer Programming | 複数著者 | 2024 | ★★★★☆ | https://pmc.ncbi.nlm.nih.gov/articles/PMC11675476/ |
-| 7 | Solving Nurse Scheduling Problem Using Constraint Programming Technique | 複数著者 | 2019 | ★★★★☆ | https://arxiv.org/abs/1902.01193 |
-| 8 | A multi-objective approach to nurse scheduling with both hard and soft constraints | Azaiez, Al Sharif | 1996 | ★★★★☆ | https://www.sciencedirect.com/science/article/abs/pii/0038012196000109 |
-| 9 | Nurse scheduling using integer linear programming and constraint programming | 複数著者 | 2014 | ★★★★☆ | https://www.researchgate.net/publication/269267836 |
-| 10 | A Constraint Satisfaction Problem (CSP) Approach for the Nurse Scheduling Problem | Shobaki, Jaradat | 2023 | ★★★★☆ | https://ieeexplore.ieee.org/document/10022250 |
+| 1 | Staff scheduling and rostering: A review of applications, methods and models | Ernst, Jiang, Krishnamoorthy, Sier | 2004 | ★★★★☆ | <https://www.sciencedirect.com/science/article/abs/pii/S0377221709003968> |
+| 2 | The state of the art of nurse rostering | Burke, De Causmaecker, Vanden Berghe, Van Landeghem | 2004 | ★★★★☆ | <https://link.springer.com/article/10.1007/s10732-008-9099-6> |
+| 3 | A Survey of the Nurse Rostering Solution Methodologies: The State-of-the-Art and Emerging Trends | 複数著者 | 2022 | ★★★★☆ | <https://www.researchgate.net/publication/360821639> |
+| 4 | Machine Learning and Constraint Programming for Efficient Healthcare Scheduling | 複数著者 | 2024 | ★★★☆☆ | <https://arxiv.org/pdf/2409.07547> |
+| 5 | Integrating Nurse Preferences Into AI-Based Scheduling Systems | 複数著者 | 2025 | ★★★★★ | <https://pmc.ncbi.nlm.nih.gov/articles/PMC12157959/> |
+| 6 | Optimizing Nurse Rostering: A Case Study Using Integer Programming | 複数著者 | 2024 | ★★★★☆ | <https://pmc.ncbi.nlm.nih.gov/articles/PMC11675476/> |
+| 7 | Solving Nurse Scheduling Problem Using Constraint Programming Technique | 複数著者 | 2019 | ★★★★☆ | <https://arxiv.org/abs/1902.01193> |
+| 8 | A multi-objective approach to nurse scheduling with both hard and soft constraints | Azaiez, Al Sharif | 1996 | ★★★★☆ | <https://www.sciencedirect.com/science/article/abs/pii/0038012196000109> |
+| 9 | Nurse scheduling using integer linear programming and constraint programming | 複数著者 | 2014 | ★★★★☆ | <https://www.researchgate.net/publication/269267836> |
+| 10 | A Constraint Satisfaction Problem (CSP) Approach for the Nurse Scheduling Problem | Shobaki, Jaradat | 2023 | ★★★★☆ | <https://ieeexplore.ieee.org/document/10022250> |
 
 #### 各論文の日勤適用可能性 詳細評価
 
@@ -64,11 +64,11 @@ IEEE発表の最新CSP実装例。制約充足問題としてのモデリング�
 
 | # | タイトル | 年 | 日勤適用可能性 | URL |
 |---|----------|----|----------------|-----|
-| 11 | Healthcare Scheduling in Optimization Context: A Review | 2021 | ★★★★★ | https://pmc.ncbi.nlm.nih.gov/articles/PMC8035616/ |
-| 12 | Development of a New Personalized Staff-Scheduling Method with a Work-Life Balance Perspective | 2023 | ★★★★★ | https://pmc.ncbi.nlm.nih.gov/articles/PMC9972317/ |
-| 13 | A Heuristic Algorithm for Medical Staff Scheduling with Multi-skills and Vacation Control | 2023 | ★★★★★ | https://pmc.ncbi.nlm.nih.gov/articles/PMC10454947/ |
-| 14 | A Scheduling Optimization Approach to Reduce Outpatient Waiting Times | 2025 | ★★★★★ | https://pmc.ncbi.nlm.nih.gov/articles/PMC11988311/ |
-| 15 | Resource Allocation and Outpatient Appointment Scheduling Using Simulation Optimization | 2017 | ★★★★★ | https://pmc.ncbi.nlm.nih.gov/articles/PMC5635465/ |
+| 11 | Healthcare Scheduling in Optimization Context: A Review | 2021 | ★★★★★ | <https://pmc.ncbi.nlm.nih.gov/articles/PMC8035616/> |
+| 12 | Development of a New Personalized Staff-Scheduling Method with a Work-Life Balance Perspective | 2023 | ★★★★★ | <https://pmc.ncbi.nlm.nih.gov/articles/PMC9972317/> |
+| 13 | A Heuristic Algorithm for Medical Staff Scheduling with Multi-skills and Vacation Control | 2023 | ★★★★★ | <https://pmc.ncbi.nlm.nih.gov/articles/PMC10454947/> |
+| 14 | A Scheduling Optimization Approach to Reduce Outpatient Waiting Times | 2025 | ★★★★★ | <https://pmc.ncbi.nlm.nih.gov/articles/PMC11988311/> |
+| 15 | Resource Allocation and Outpatient Appointment Scheduling Using Simulation Optimization | 2017 | ★★★★★ | <https://pmc.ncbi.nlm.nih.gov/articles/PMC5635465/> |
 
 **[11] Healthcare Scheduling in Optimization Context: A Review (PMC 2021)** — ★★★★★（最高）
 外来クリニック含む医療スケジューリングの包括的レビュー。日勤シフト文脈での制約・目標の整理に直接役立つ。最も重要な参考資料の一つ。
@@ -91,10 +91,10 @@ IEEE発表の最新CSP実装例。制約充足問題としてのモデリング�
 
 | # | タイトル | 年 | 日勤適用可能性 | URL |
 |---|----------|----|----------------|-----|
-| 16 | Fairness and Decision-making in Collaborative Shift Scheduling Systems (CHI 2020) | 2020 | ★★★★★ | https://dl.acm.org/doi/fullHtml/10.1145/3313831.3376656 |
-| 17 | Pareto-Optimal Workforce Scheduling with Worker Skills and Preferences | 2025 | ★★★★★ | https://link.springer.com/article/10.1007/s12351-025-00903-7 |
-| 18 | A Review of Multi-Objective Optimization Methods for Personnel Rostering | 2025 | ★★★★☆ | https://link.springer.com/article/10.1007/s10951-025-00845-0 |
-| 19 | Towards Fairness-Aware Multi-Objective Optimization | 2024 | ★★★★☆ | https://link.springer.com/article/10.1007/s40747-024-01668-w |
+| 16 | Fairness and Decision-making in Collaborative Shift Scheduling Systems (CHI 2020) | 2020 | ★★★★★ | <https://dl.acm.org/doi/fullHtml/10.1145/3313831.3376656> |
+| 17 | Pareto-Optimal Workforce Scheduling with Worker Skills and Preferences | 2025 | ★★★★★ | <https://link.springer.com/article/10.1007/s12351-025-00903-7> |
+| 18 | A Review of Multi-Objective Optimization Methods for Personnel Rostering | 2025 | ★★★★☆ | <https://link.springer.com/article/10.1007/s10951-025-00845-0> |
+| 19 | Towards Fairness-Aware Multi-Objective Optimization | 2024 | ★★★★☆ | <https://link.springer.com/article/10.1007/s40747-024-01668-w> |
 
 **[16] Fairness and Decision-making in Collaborative Shift Scheduling (CHI 2020)** — ★★★★★（最高）
 4次元の公平性フレームワーク（分配的・手続き的・情報的・対人的）を定義。参加型スケジューリングのUI/UX設計にも活用可能。日勤クリニックに完全適用可能。
@@ -107,13 +107,15 @@ IEEE発表の最新CSP実装例。制約充足問題としてのモデリング�
 ## 2. ベンチマーク問題（INRC）
 
 ### INRC-I（第1回国際ナーススケジューリングコンペティション）
+
 - **開催**: PATAT-2010スポンサー
 - **形式**: 週単位の静的問題。複数病棟、複数シフトタイプ
 - **特徴**: 最も広く使われているベンチマークデータセット
-- **参照**: https://www.schedulingbenchmarks.org/
+- **参照**: <https://www.schedulingbenchmarks.org/>
 - **日勤適用可能性**: ★★★☆☆（中）夜勤シフトのベンチマークだが、制約の多様性・評価方法の参考になる
 
 ### INRC-II（第2回国際ナーススケジューリングコンペティション）
+
 - **形式**: 動的ローリングホライズン型。複数週にわたる計画
 - **特徴**: 週をまたぐ制約（連続勤務日数等）の扱いが複雑
 - **日勤適用可能性**: ★★★★☆（高）ローリングホライズン手法は日勤シフト管理にも有効
@@ -131,7 +133,7 @@ IEEE発表の最新CSP実装例。制約充足問題としてのモデリング�
 
 ### 3.2 ハード制約の典型パターン（日勤適用）
 
-```
+```text
 HC-001: 各スタッフは1日最大1シフト
 HC-002: 各日・各時間帯に必要最低人数を確保（受付・診察・処置等の業務別）
 HC-003: 週労働時間の上限（労働基準法：40時間/週）
@@ -143,7 +145,7 @@ HC-007: 最低連続休日数（例：週2日の休み保証）
 
 ### 3.3 ソフト制約の典型パターン（日勤クリニック）
 
-```
+```text
 SC-001: スタッフの出勤希望日・休暇希望日の充足（重み: HIGH）
 SC-002: 連続勤務日数の希望（例：3日以上連続は避けたい）（重み: MEDIUM）
 SC-003: 特定業務担当の希望（重み: MEDIUM）
@@ -155,7 +157,7 @@ SC-007: 長期的な希望充足率の均等化（重み: HIGH）
 
 ### 3.4 目的関数の設計パターン
 
-```
+```text
 minimize: F(schedule) = Σ(ペナルティ × ソフト制約違反数) + λ × G(過不足コスト)
 
 - F: スタッフ不満度の線形関数
@@ -241,16 +243,16 @@ rolling_avg = pd.Series(weekly_rates).rolling(window=4).mean()
 
 | # | リポジトリ | 言語・技術 | スター | URL |
 |---|-----------|---------|--------|-----|
-| 1 | **google/or-tools** (employee_scheduling) | Python, CP-SAT | 公式 | https://developers.google.com/optimization/scheduling/employee_scheduling |
-| 2 | **or-tools shift_scheduling_sat.py** | Python | 公式 | https://github.com/google/or-tools/blob/stable/examples/python/shift_scheduling_sat.py |
-| 3 | **weiran-aitech/shift_schedule** | Python, CP | - | https://github.com/weiran-aitech/shift_schedule |
-| 4 | **ordenador/genetic-shift-scheduler** | Python, GA + Flask | - | https://github.com/ordenador/genetic-shift-scheduler |
-| 5 | **lbiedma/shift-scheduling** | Python, PuLP+MIP | - | https://github.com/lbiedma/shift-scheduling |
-| 6 | **dwave-examples/employee-scheduling** | Python, 量子ハイブリッド | D-Wave公式 | https://github.com/dwave-examples/employee-scheduling |
-| 7 | **staffjoy** | Go/Python | - | https://github.com/staffjoy |
-| 8 | **OptaPlanner (nurse-rostering)** | Java, OptaPlanner | 公式 | https://www.optaplanner.org/ |
-| 9 | **unsharot/kinmu_rs** | Rust | ⭐6 | https://github.com/unsharot/kinmu_rs |
-| 10 | **j3soon/nurse-scheduling** | Python, Web | ⭐5 | https://github.com/j3soon/nurse-scheduling |
+| 1 | **google/or-tools** (employee_scheduling) | Python, CP-SAT | 公式 | <https://developers.google.com/optimization/scheduling/employee_scheduling> |
+| 2 | **or-tools shift_scheduling_sat.py** | Python | 公式 | <https://github.com/google/or-tools/blob/stable/examples/python/shift_scheduling_sat.py> |
+| 3 | **weiran-aitech/shift_schedule** | Python, CP | - | <https://github.com/weiran-aitech/shift_schedule> |
+| 4 | **ordenador/genetic-shift-scheduler** | Python, GA + Flask | - | <https://github.com/ordenador/genetic-shift-scheduler> |
+| 5 | **lbiedma/shift-scheduling** | Python, PuLP+MIP | - | <https://github.com/lbiedma/shift-scheduling> |
+| 6 | **dwave-examples/employee-scheduling** | Python, 量子ハイブリッド | D-Wave公式 | <https://github.com/dwave-examples/employee-scheduling> |
+| 7 | **staffjoy** | Go/Python | - | <https://github.com/staffjoy> |
+| 8 | **OptaPlanner (nurse-rostering)** | Java, OptaPlanner | 公式 | <https://www.optaplanner.org/> |
+| 9 | **unsharot/kinmu_rs** | Rust | ⭐6 | <https://github.com/unsharot/kinmu_rs> |
+| 10 | **j3soon/nurse-scheduling** | Python, Web | ⭐5 | <https://github.com/j3soon/nurse-scheduling> |
 
 ---
 
@@ -260,27 +262,27 @@ rolling_avg = pd.Series(weekly_rates).rolling(window=4).mean()
 
 | タイトル | URL |
 |----------|-----|
-| シフトスケジューリング問題を解いてみた | https://qiita.com/SaitoTsutomu/items/4278871ab4ce2be17752 |
-| 組合せ最適化でナーススケジューリング問題を解く | https://qiita.com/SaitoTsutomu/items/a33aba1a95828eb6bd3f |
-| シフト・スケジューリング問題をいろいろな手法で解いてみた | https://qiita.com/tail-island/items/c786d8b1bc5ccf3b5d53 |
-| Python＋PuLPを使ってシフト表を自動作成 | https://qiita.com/ookamikujira/items/862ec78914d5deb549c1 |
-| Pulp 組み合わせ最適化でシフト表作成 可能な限り2連休を作る | https://qiita.com/ookamikujira/items/eccf65cfe89176b8c468 |
+| シフトスケジューリング問題を解いてみた | <https://qiita.com/SaitoTsutomu/items/4278871ab4ce2be17752> |
+| 組合せ最適化でナーススケジューリング問題を解く | <https://qiita.com/SaitoTsutomu/items/a33aba1a95828eb6bd3f> |
+| シフト・スケジューリング問題をいろいろな手法で解いてみた | <https://qiita.com/tail-island/items/c786d8b1bc5ccf3b5d53> |
+| Python＋PuLPを使ってシフト表を自動作成 | <https://qiita.com/ookamikujira/items/862ec78914d5deb549c1> |
+| Pulp 組み合わせ最適化でシフト表作成 可能な限り2連休を作る | <https://qiita.com/ookamikujira/items/eccf65cfe89176b8c468> |
 
 ### 6.2 Zenn記事
 
 | タイトル | URL |
 |----------|-----|
-| 整数計画ソルバーでシフトスケジューリング問題を解いてみた | https://zenn.dev/umepon/articles/5aef89c5c348de |
-| 制約最適化モデリングでシフトスケジューリング最適化 | https://zenn.dev/fusic/articles/06b524105ec899 |
+| 整数計画ソルバーでシフトスケジューリング問題を解いてみた | <https://zenn.dev/umepon/articles/5aef89c5c348de> |
+| 制約最適化モデリングでシフトスケジューリング最適化 | <https://zenn.dev/fusic/articles/06b524105ec899> |
 
 ### 6.3 企業技術ブログ
 
 | タイトル | URL |
 |----------|-----|
-| 数理最適化によって訪問介護のシフトスケジューリングモデルを作ってみた話 | https://tech.bm-sms.co.jp/entry/2023/03/28/120000 |
-| 最適化勉強会 ～数理最適化を使用してシフトスケジューリング問題を解く～ | https://www.nri-digital.jp/tech/20240919-18835/ |
-| シフト最適化への応用が期待される強化学習を用いた組合せ最適化の解法 | https://www.chowagiken.co.jp/blog/combinatorial_optimization |
-| シフトスケジューリング問題 (opt100) | https://scmopt.github.io/opt100/81shift-minimization.html |
+| 数理最適化によって訪問介護のシフトスケジューリングモデルを作ってみた話 | <https://tech.bm-sms.co.jp/entry/2023/03/28/120000> |
+| 最適化勉強会 ～数理最適化を使用してシフトスケジューリング問題を解く～ | <https://www.nri-digital.jp/tech/20240919-18835/> |
+| シフト最適化への応用が期待される強化学習を用いた組合せ最適化の解法 | <https://www.chowagiken.co.jp/blog/combinatorial_optimization> |
+| シフトスケジューリング問題 (opt100) | <https://scmopt.github.io/opt100/81shift-minimization.html> |
 
 ---
 
@@ -288,10 +290,10 @@ rolling_avg = pd.Series(weekly_rates).rolling(window=4).mean()
 
 | ツール | 言語 | 特徴 | URL |
 |--------|------|------|-----|
-| **OR-Tools (CP-SAT)** | Python, C++, Java | Googleが開発。制約プログラミング・線形最適化を統合 | https://developers.google.com/optimization |
-| **PuLP** | Python | 線形計画・整数計画のモデリング言語。CBC/Gurobiに接続 | https://coin-or.github.io/pulp/ |
-| **OptaPlanner / Timefold** | Java/Python | エンタープライズ向けソルバー。NSPのサンプルデモ内蔵 | https://www.optaplanner.org/ |
-| **Gurobi** | Python, Java, C++ | 商用最適化ソルバー。大規模問題に高性能。学術利用は無償 | https://www.gurobi.com/ |
+| **OR-Tools (CP-SAT)** | Python, C++, Java | Googleが開発。制約プログラミング・線形最適化を統合 | <https://developers.google.com/optimization> |
+| **PuLP** | Python | 線形計画・整数計画のモデリング言語。CBC/Gurobiに接続 | <https://coin-or.github.io/pulp/> |
+| **OptaPlanner / Timefold** | Java/Python | エンタープライズ向けソルバー。NSPのサンプルデモ内蔵 | <https://www.optaplanner.org/> |
+| **Gurobi** | Python, Java, C++ | 商用最適化ソルバー。大規模問題に高性能。学術利用は無償 | <https://www.gurobi.com/> |
 
 ---
 
@@ -309,7 +311,7 @@ rolling_avg = pd.Series(weekly_rates).rolling(window=4).mean()
 
 ### 8.2 日勤特化のモデル簡略化（NSPとの比較）
 
-```
+```text
 除去可能な夜勤制約:
   ✖ 夜勤→日勤間の最低インターバル（通常11時間）
   ✖ 夜勤手当計算
@@ -346,6 +348,7 @@ rolling_avg = pd.Series(weekly_rates).rolling(window=4).mean()
 | 企業技術ブログ | 4件 | ✅ |
 
 **重要知見**:
+
 1. **NSPはNP困難**: 実用規模では厳密解法より近似・ヒューリスティクスが主流
 2. **ハード/ソフト制約の分離が設計の核心**: 違反コストをペナルティ関数に組み込む手法が標準
 3. **最新トレンド（2020-2025）**: ML（強化学習・深層学習）と従来最適化手法のハイブリッドが主流に
@@ -360,16 +363,16 @@ rolling_avg = pd.Series(weekly_rates).rolling(window=4).mean()
 
 | 順位 | 資料名 | URL | 選定理由 |
 |-----|--------|-----|---------|
-| **1** | Google OR-Tools: Employee Scheduling (公式) | https://developers.google.com/optimization/scheduling/employee_scheduling | CP-SATソルバーの実装起点。最も実践的なチュートリアル。日勤シフト変数への置き換えが容易 |
-| **2** | shift_scheduling_sat.py (OR-Tools GitHub) | https://github.com/google/or-tools/blob/stable/examples/python/shift_scheduling_sat.py | 本番レベルのPython実装。制約モデリングのベストプラクティスが凝縮 |
-| **3** | Pareto-Optimal Workforce Scheduling (Springer 2025) | https://link.springer.com/article/10.1007/s12351-025-00903-7 | スキル×希望の多目的最適化。日勤クリニックの業務割り当てに直接適用可能な最新論文 |
-| **4** | Healthcare Scheduling in Optimization Context: A Review (PMC 2021) | https://pmc.ncbi.nlm.nih.gov/articles/PMC8035616/ | 外来クリニック含む医療スケジューリングの包括的レビュー。設計全体像の把握に最適 |
-| **5** | Fairness and Decision-making in Collaborative Shift Scheduling (CHI 2020) | https://dl.acm.org/doi/fullHtml/10.1145/3313831.3376656 | 公平性の4次元フレームワーク。UI/UX設計にも活用可能。日勤クリニックに完全適用可能 |
-| **6** | 整数計画ソルバーでシフトスケジューリング問題を解いてみた (Zenn) | https://zenn.dev/umepon/articles/5aef89c5c348de | 日本語で読める最も実践的な実装記事。PuLPで即実行可。制約モデリングを日本語で解説 |
-| **7** | Personalized Staff-Scheduling with Work-Life Balance (PMC 2023) | https://pmc.ncbi.nlm.nih.gov/articles/PMC9972317/ | 個人希望×ワークライフバランスの研究。日勤クリニックの設計思想と完全一致 |
-| **8** | Medical Staff Scheduling with Multi-skills (PMC 2023) | https://pmc.ncbi.nlm.nih.gov/articles/PMC10454947/ | マルチスキル制約の実装パターン。外来クリニックの業務別スキル管理に直接応用可能 |
-| **9** | Integrating Nurse Preferences Into AI-Based Scheduling (JMIR 2025) | https://pmc.ncbi.nlm.nih.gov/articles/PMC12157959/ | AI×NLPでスタッフ希望を吸い上げる最新アプローチ。将来のAI統合拡張に有用 |
-| **10** | 数理最適化によって訪問介護のシフトスケジューリングモデルを作った話 | https://tech.bm-sms.co.jp/entry/2023/03/28/120000 | 日本の医療・介護業界での実務事例。日本の法規制・文化的文脈（有給・労基）が参考になる |
+| **1** | Google OR-Tools: Employee Scheduling (公式) | <https://developers.google.com/optimization/scheduling/employee_scheduling> | CP-SATソルバーの実装起点。最も実践的なチュートリアル。日勤シフト変数への置き換えが容易 |
+| **2** | shift_scheduling_sat.py (OR-Tools GitHub) | <https://github.com/google/or-tools/blob/stable/examples/python/shift_scheduling_sat.py> | 本番レベルのPython実装。制約モデリングのベストプラクティスが凝縮 |
+| **3** | Pareto-Optimal Workforce Scheduling (Springer 2025) | <https://link.springer.com/article/10.1007/s12351-025-00903-7> | スキル×希望の多目的最適化。日勤クリニックの業務割り当てに直接適用可能な最新論文 |
+| **4** | Healthcare Scheduling in Optimization Context: A Review (PMC 2021) | <https://pmc.ncbi.nlm.nih.gov/articles/PMC8035616/> | 外来クリニック含む医療スケジューリングの包括的レビュー。設計全体像の把握に最適 |
+| **5** | Fairness and Decision-making in Collaborative Shift Scheduling (CHI 2020) | <https://dl.acm.org/doi/fullHtml/10.1145/3313831.3376656> | 公平性の4次元フレームワーク。UI/UX設計にも活用可能。日勤クリニックに完全適用可能 |
+| **6** | 整数計画ソルバーでシフトスケジューリング問題を解いてみた (Zenn) | <https://zenn.dev/umepon/articles/5aef89c5c348de> | 日本語で読める最も実践的な実装記事。PuLPで即実行可。制約モデリングを日本語で解説 |
+| **7** | Personalized Staff-Scheduling with Work-Life Balance (PMC 2023) | <https://pmc.ncbi.nlm.nih.gov/articles/PMC9972317/> | 個人希望×ワークライフバランスの研究。日勤クリニックの設計思想と完全一致 |
+| **8** | Medical Staff Scheduling with Multi-skills (PMC 2023) | <https://pmc.ncbi.nlm.nih.gov/articles/PMC10454947/> | マルチスキル制約の実装パターン。外来クリニックの業務別スキル管理に直接応用可能 |
+| **9** | Integrating Nurse Preferences Into AI-Based Scheduling (JMIR 2025) | <https://pmc.ncbi.nlm.nih.gov/articles/PMC12157959/> | AI×NLPでスタッフ希望を吸い上げる最新アプローチ。将来のAI統合拡張に有用 |
+| **10** | 数理最適化によって訪問介護のシフトスケジューリングモデルを作った話 | <https://tech.bm-sms.co.jp/entry/2023/03/28/120000> | 日本の医療・介護業界での実務事例。日本の法規制・文化的文脈（有給・労基）が参考になる |
 
 ---
 
