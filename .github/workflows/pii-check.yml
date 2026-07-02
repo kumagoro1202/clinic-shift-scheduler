@@ -10,6 +10,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # 検知自己テスト（canary test）: 疑似PIIをスキャナが検知できることを先に実証する。
+      # スキャナが壊れている（パターン不一致・CRLF混入等）場合はここで CI が fail する。
+      - name: PII scanner self-test (canary)
+        run: bash scripts/pii-check.sh --self-test
+
       # ローカルのpre-commitフックと同一スクリプトを単一の検査ロジックとして使用する。
       # git ls-files を使うため .git 配下や未追跡ファイルは対象外。
       - name: Run PII check (scripts/pii-check.sh)

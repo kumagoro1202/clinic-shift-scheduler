@@ -6,3 +6,11 @@
 noreply@anthropic.com
 noreply@github.com
 actions@github.com
+users.noreply.github.com
+
+# CLAUDE.md 個人情報保護ルールの匿名化例示行（×悪い例 → ○良い例 の形式のみ）
+# 実在の個人を指すものではなく、ルール説明のための架空例
+×田中さん → ○スタッフA
+×鈴木看護師 → ○看護師A
+×佐藤さん → ○受付A
+×高橋PT → ○リハA
