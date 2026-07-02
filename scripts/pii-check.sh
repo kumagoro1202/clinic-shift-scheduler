@@ -18,14 +18,18 @@ check_allowlist() {
   echo "$content" | grep -v -f "$ALLOWLIST_ACTIVE" || true
 }
 
-# セルフテスト（canary test）: 疑似PIIを一時ファイルに書き、スキャナが
-# 検知できること（真陽性）を確認する。検知できなければスキャナが壊れて
-# いる（パターン不一致・CRLF混入等）ため exit 1 で CI を落とす。
+# セルフテスト（canary test）: スキャナ自体の検知能力を両方向から検証する。
+#   真陽性: 疑似PIIを含む一時fixtureが「検知されて失敗する」こと。検知しなければ
+#           スキャナが壊れている（パターン不一致・CRLF混入等）ため exit 1 で CI を落とす
+#   真陰性: 匿名化済みのクリーンなfixtureが「素通りする」こと。誤検知過多への
+#           振れ戻り（オオカミ少年化）を検知する
 # 疑似PII文字列は \u エスケープ・文字列連結で組み立て、本スクリプト自身が
 # スキャン対象になっても誤検知しないようにしている。実在の個人情報は不使用。
+# fixture は mktemp で実行時生成し trap で削除する（リポジトリにはコミットしない）。
 if [ "$1" = "--self-test" ]; then
   CANARY_FILE=$(mktemp /tmp/pii-canary.XXXXXX.md)
-  trap 'rm -f "$CANARY_FILE"' EXIT
+  CLEAN_FILE=$(mktemp /tmp/pii-clean.XXXXXX.md)
+  trap 'rm -f "$CANARY_FILE" "$CLEAN_FILE"' EXIT
 
   {
     # 疑似人名 + 敬称（架空）: U+5C71 U+672C U+5148 U+751F
@@ -38,14 +42,25 @@ if [ "$1" = "--self-test" ]; then
     printf '\u6771\u4eac\u90fd\u5343\u4ee3\u7530\u533a\n'
   } > "$CANARY_FILE"
 
+  # 真陰性fixture: CLAUDE.md 準拠の匿名表記のみ（検知されてはならない）
+  {
+    printf '\u30b9\u30bf\u30c3\u30d5A\u306f9\u6642\u9593\u52e4\u52d9\n'
+    printf '\u770b\u8b77\u5e2bB\u3068\u53d7\u4ed8C\u306e\u30b7\u30d5\u30c8\u3092\u8abf\u6574\n'
+  } > "$CLEAN_FILE"
+
   echo "=== PII scanner self-test (canary) ==="
   if bash "$0" "$CANARY_FILE"; then
     echo "❌ SELF-TEST FAILED: canary pseudo-PII was NOT detected. Scanner is broken."
     exit 1
-  else
-    echo "✅ SELF-TEST PASSED: canary pseudo-PII was correctly detected."
-    exit 0
   fi
+  echo "--- true positive OK: canary pseudo-PII was correctly detected ---"
+  if ! bash "$0" "$CLEAN_FILE"; then
+    echo "❌ SELF-TEST FAILED: clean (anonymized) fixture was falsely flagged. Scanner is over-detecting."
+    exit 1
+  fi
+  echo "--- true negative OK: clean fixture passed without false positives ---"
+  echo "✅ SELF-TEST PASSED: true positive + true negative both as expected."
+  exit 0
 fi
 
 # 前処理: allowlist / blocklist からコメント行・空行・CR（CRLF対策）を除去して
