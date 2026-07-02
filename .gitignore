@@ -23,3 +23,7 @@ target/
 *.log
 .env
 .env.local
+
+# テスト成果物
+.coverage
+.pytest_cache/

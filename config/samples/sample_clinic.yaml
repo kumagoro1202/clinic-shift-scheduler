@@ -1,0 +1,133 @@
+# =============================================================================
+# サンプル診療所設定（テスト専用・架空データ）
+# -----------------------------------------------------------------------------
+# 本ファイルはテスト・動作確認専用のサンプル設定である。
+# スタッフは全員架空（スタッフA〜E）であり、実在の個人・施設とは無関係。
+# 必要人数など未確定の項目（要求事項定義書の Q-02/Q-03/Q-06 等）は、
+# 5名構成で解が存在するよう縮小したテスト用の値を使用している。
+# スキーマの定義は config/schema_reference.md を参照。
+# =============================================================================
+
+schema_version: 1
+
+# 勤務体系（確定値: 拘束9時間・休憩1時間・実働8時間）
+work_rules:
+  binding_hours: 9
+  break_minutes: 60
+  working_hours: 8
+  break_window: # 休憩を開始できる時間帯（暫定値・Q-04）
+    start: "12:00"
+    end: "15:30"
+
+# オプション機能
+options:
+  weekly_hours_check:
+    enabled: false # 週40時間チェック（初期OFF）
+    limit_hours: 40
+
+# 時間解像度（分）。診療時間・必要人数の境界はこの倍数に揃えること
+slot_minutes: 30
+
+# 曜日別の日種別: full=終日診療 / short=午後短縮 / half=午前のみ / closed=休診
+day_types:
+  mon: full
+  tue: full
+  wed: short
+  thu: half
+  fri: full
+  sat: half
+  sun: closed
+
+# 曜日別の診療時間（参考情報。制約は areas.requirements の時間帯を使用する）
+clinic_hours:
+  mon: { am: ["09:00", "12:30"], pm: ["15:30", "18:30"] }
+  tue: { am: ["09:00", "12:30"], pm: ["15:30", "18:30"] }
+  wed: { am: ["09:00", "12:30"], pm: ["15:30", "17:30"] }
+  thu: { am: ["09:00", "12:30"], pm: null }
+  fri: { am: ["09:00", "12:30"], pm: ["15:30", "18:30"] }
+  sat: { am: ["09:00", "13:30"], pm: null }
+  sun: { am: null, pm: null }
+
+# 勤務パターン（日種別ごとに選択可能なパターンを定義）
+# break_minutes > 0 のパターンは 拘束 = binding_hours、休憩 = break_minutes を検証する
+shift_patterns:
+  - name: early
+    day_types: [full, short]
+    start: "08:30"
+    end: "17:30"
+    break_minutes: 60
+  - name: late
+    day_types: [full]
+    start: "09:30"
+    end: "18:30"
+    break_minutes: 60
+  - name: half
+    day_types: [half]
+    start: "08:30"
+    end: "13:30"
+    break_minutes: 0 # 半日勤務は休憩なし（暫定値・Q-03）
+
+# 業務エリアと曜日別必要人数（テスト用縮小値・実運用値は Q-06 確認後に設定）
+areas:
+  - name: rehab # リハ室
+    required_skills: [rehab]
+    requirements:
+      mon: &rehab_full
+        - { start: "09:00", end: "12:30", headcount: 1 }
+        - { start: "15:30", end: "17:30", headcount: 1 }
+      tue: *rehab_full
+      wed: *rehab_full
+      thu:
+        - { start: "09:00", end: "12:30", headcount: 1 }
+      fri: *rehab_full
+      sat:
+        - { start: "09:00", end: "13:00", headcount: 1 }
+      sun: []
+  - name: reception # 受付（医事業務優先）
+    required_skills: [reception_am, reception_pm]
+    requirements:
+      mon: &reception_full
+        - { start: "08:30", end: "12:30", headcount: 2 }
+        - { start: "12:30", end: "15:30", headcount: 1 }
+        - { start: "15:30", end: "18:30", headcount: 2 }
+      tue: *reception_full
+      wed:
+        - { start: "08:30", end: "12:30", headcount: 2 }
+        - { start: "12:30", end: "15:30", headcount: 1 }
+        - { start: "15:30", end: "17:30", headcount: 2 }
+      thu:
+        - { start: "08:30", end: "12:30", headcount: 2 }
+      fri: *reception_full
+      sat:
+        - { start: "08:30", end: "13:30", headcount: 2 }
+      sun: []
+
+# スタッフ定義（全員架空のテストデータ）
+# skills: リハ室 / 受付午前 / 受付午後 / 総合対応力（0〜100。0 = 配置不可）
+staff:
+  - name: "スタッフA"
+    employment: full_time
+    weekly_workdays: 6
+    skills: { rehab: 70, reception_am: 80, reception_pm: 80, general: 85 }
+    vacations: []
+  - name: "スタッフB"
+    employment: full_time
+    weekly_workdays: 6
+    skills: { rehab: 0, reception_am: 90, reception_pm: 85, general: 75 }
+    vacations: []
+  - name: "スタッフC"
+    employment: full_time
+    weekly_workdays: 5
+    skills: { rehab: 90, reception_am: 0, reception_pm: 0, general: 70 }
+    vacations: []
+  - name: "スタッフD"
+    employment: part_time
+    weekly_workdays: 5
+    skills: { rehab: 75, reception_am: 60, reception_pm: 65, general: 60 }
+    vacations:
+      - { weekday: thu, kind: full }
+  - name: "スタッフE"
+    employment: part_time
+    weekly_workdays: 5
+    skills: { rehab: 0, reception_am: 70, reception_pm: 75, general: 65 }
+    vacations: []
