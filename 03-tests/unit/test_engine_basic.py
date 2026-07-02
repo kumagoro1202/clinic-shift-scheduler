@@ -11,7 +11,7 @@ import pytest
 from scheduler import config_loader, engine
 
 SAMPLE_CONFIG = (
-    Path(__file__).resolve().parents[1] / "config" / "samples" / "sample_clinic.yaml"
+    Path(__file__).resolve().parents[2] / "config" / "samples" / "sample_clinic.yaml"
 )
 
 

@@ -1,0 +1,29 @@
+# プロジェクト設定・ツール設定の一元管理（ROADMAP P5）
+# 依存パッケージの実体は requirements.txt / requirements-dev.txt で管理する
+# （CLAUDE.md「依存関係管理」参照。本ファイルはビルド配布を目的としない）
+
+[project]
+name = "clinic-shift-scheduler"
+version = "0.1.0"
+description = "クリニック向けシフト自動作成システム（日勤のみ・9時間勤務・1時間休憩）"
+requires-python = ">=3.12"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["02-src", "03-tests"]
+
+[tool.ruff.lint]
+# E/W: pycodestyle, F: pyflakes, I: import順序（isort 相当）
+select = ["E", "F", "W", "I"]
+
+[tool.pytest.ini_options]
+testpaths = ["03-tests"]
+addopts = "-ra"
+
+[tool.coverage.run]
+source = ["02-src"]
+
+[tool.coverage.report]
+show_missing = true
+precision = 1
