@@ -80,9 +80,42 @@ clinic-shift-scheduler/
 │
 ├── .pre-commit-config.yaml      # Pre-commitフック設定
 ├── .markdownlint.json           # Markdownlintルール設定
+├── .gitattributes               # scripts/ のLF強制（PIIスキャナCRLF故障対策）
 ├── .gitignore
 └── CLAUDE.md                    # プロジェクト固有ルール
 ```
+
+## 個人情報保護（PIIスキャン）
+
+pre-commit フックと GitHub Actions CI（`pii-check.yml`）が `scripts/pii-check.sh` を
+共通の検査ロジックとして参照し、日本人名（漢字+敬称・姓ブロックリスト）・電話番号・
+メールアドレス・住所のパターンを検出する。誤検知の除外は `scripts/allowlist.txt` で
+管理する（変更はPR必須）。
+
+### canaryセルフテスト
+
+CI は本スキャンの前に **canaryセルフテスト**（`scripts/pii-check.sh --self-test`）を
+毎回実行し、スキャナ自体の検知能力を両方向から検証する。
+
+- **真陽性検証**: 架空の疑似PII（疑似人名+敬称・疑似電話番号・疑似メール・疑似住所）を
+  含む一時fixtureが検知されること。検知されなければ「スキャナ故障」としてCIを赤にする
+- **真陰性検証**: 匿名化済みのクリーンなfixture（スタッフA 等）が素通りすること。
+  誤検知過多への振れ戻りを検知する
+
+これにより「スキャナが壊れているのにCIが緑のまま」という空回り状態
+（例: パターン定義ファイルへのCRLF混入で全パターンが不一致になる故障）を構造的に排除する。
+fixture は実行時に一時生成され、リポジトリにはコミットされない。文字列はすべて架空である。
+
+### SELF-TEST FAILED が出た場合の対処
+
+1. `scanner is broken`（真陽性失敗）: パターン定義が壊れている。
+   `file scripts/*.txt` で CRLF 混入を確認し、`head -5 scripts/pii-patterns.txt | cat -A` で
+   行末 `^M$` の有無を目視する。パターンを変更した直後なら正規表現の互換性を疑う
+2. `over-detecting`（真陰性失敗）: パターンが過剰検知に振れている。
+   直近のパターン・ブロックリスト変更をレビューし、匿名表記（スタッフA 等）が
+   誤検知されない状態へ修正する
+3. パターンを調整した場合は `bash scripts/pii-check.sh --self-test` をローカルで再実行し、
+   両方向PASSを確認してからコミットする
 
 ## 開発ワークフロー
 

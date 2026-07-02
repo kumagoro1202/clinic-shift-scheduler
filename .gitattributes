@@ -1,0 +1,5 @@
+# PIIスキャナのパターン定義・スクリプトはLF必須。
+# CRLF混入すると read -r がパターン末尾に \r を拾い、正規表現が
+# いかなるLFファイルにもマッチしなくなる（スキャナ空回り故障）ため強制する。
+scripts/*.txt text eol=lf
+scripts/*.sh text eol=lf
