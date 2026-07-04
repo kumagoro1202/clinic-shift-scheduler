@@ -6,6 +6,7 @@ from pathlib import Path
 
 from ortools.sat.python import cp_model
 
+from . import objectives
 from .calendar import expand_month, load_monthly_schedule
 from .config_loader import Config, format_time, load_config
 from .constraints import ShiftModel, build_model, build_monthly_model, patterns_for_day
@@ -73,9 +74,15 @@ def _solve(sm: ShiftModel, time_limit_seconds: float) -> dict:
 
 
 def _set_objective(sm: ShiftModel) -> None:
-    """必要人数を満たす範囲で、勤務日数と配置スロット数を最小化する。"""
+    """必要人数を満たす範囲で、勤務日数・SC-001スキルバランス乖離・配置スロット数を
+    最小化する（`internal/engine-design.md` 4.1節。SC-002/004/005はP6-5〜7で追加）。
+    """
+    sc001_penalty = objectives.add_sc001_skill_balance(sm)
+    sc001_weight = objectives.weight_for(sm.config.optimization_mode, "sc001")
     sm.model.minimize(
-        _WORKDAY_WEIGHT * sum(sm.works.values()) + sum(sm.assign.values())
+        _WORKDAY_WEIGHT * sum(sm.works.values())
+        + sc001_weight * sc001_penalty
+        + sum(sm.assign.values())
     )
 
 
