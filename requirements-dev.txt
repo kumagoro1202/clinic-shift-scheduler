@@ -1,0 +1,4 @@
+# 開発用依存パッケージ（テスト・lint）。実行時依存は requirements.txt を参照。
+-r requirements.txt
+pytest-cov>=7.0
+ruff>=0.8
