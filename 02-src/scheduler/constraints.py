@@ -8,6 +8,7 @@
 
 オプション制約:
     週労働時間チェック（options.weekly_hours_check、初期 OFF）
+    HC-006 厳格形・同時複数名休憩の一律禁止（options.strict_single_break、初期 OFF）
 """
 
 from __future__ import annotations
@@ -73,6 +74,7 @@ def build_model(config: Config) -> ShiftModel:
     add_hc002_single_assignment(sm)
     add_hc003_work_pattern(sm)
     add_hc004_vacations(sm)
+    add_optional_strict_single_break(sm)
     add_optional_weekly_hours_check(sm)
     return sm
 
@@ -257,6 +259,39 @@ def add_hc004_vacations(sm: ShiftModel) -> None:
                     key = (staff.name, weekday, area.name, slot)
                     if key in sm.assign:
                         sm.model.add(sm.assign[key] == 0)
+
+
+def add_optional_strict_single_break(sm: ShiftModel) -> None:
+    """オプション: HC-006 厳格形（options.strict_single_break.enabled、初期 OFF）。
+
+    基本形（窓口人数維持）は HC-001 × HC-003(d) の組み合わせで充足済みのため、
+    このオプションは「同時に複数名が休憩に入ることの一律禁止」のみを追加する。
+    各（日, スロット）について、そのスロットを覆う休憩を開始しているスタッフの
+    合計人数が高々 1 人であることを課す:
+    各（日, スロット）: Σ_staff Σ_{開始が当該スロットを覆う} break_start ≤ 1
+    """
+    config = sm.config
+    if not config.strict_single_break.enabled:
+        return
+    step = config.slot_minutes
+    break_slots = config.work_rules.break_minutes // step
+    if break_slots <= 0:
+        return
+
+    starts_by_weekday: dict[str, list[tuple[int, cp_model.IntVar]]] = {}
+    for (_, weekday, start_slot), var in sm.break_start.items():
+        starts_by_weekday.setdefault(weekday, []).append((start_slot, var))
+
+    for weekday in config.open_weekdays():
+        starts = starts_by_weekday.get(weekday, [])
+        for slot in sm.slots[weekday]:
+            covering = [
+                var
+                for start_slot, var in starts
+                if start_slot <= slot < start_slot + break_slots * step
+            ]
+            if len(covering) > 1:
+                sm.model.add_at_most_one(covering)
 
 
 def add_optional_weekly_hours_check(sm: ShiftModel) -> None:

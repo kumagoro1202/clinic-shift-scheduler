@@ -167,7 +167,7 @@ SC-001（スキルバランス）・SC-002（連続配置優先）。
 | HC-003 | `add_hc003_work_pattern()`（(a)〜(c)・(e)）+ `_add_break_constraints()`（(d)） | ✅ 実装済み |
 | HC-004 | `add_hc004_vacations()` + `_vacation_blocks()` | ✅ 実装済み |
 | HC-005 | `_create_variables()` 内の `staff.qualifies(area)` 判定（配置不可エリアの決定変数を生成しない方式） | ✅ 実装済み（暗黙的実装。P6 で明示テストの追加を推奨） |
-| HC-006 | —（窓口人数維持は HC-001 + HC-003(d) の組み合わせで充足） | ⚠️ 一部実装（同時休憩禁止の厳格形は未実装。Q-04 確定後に P6 で実装判断） |
+| HC-006 | 窓口人数維持は HC-001 + HC-003(d) の組み合わせで充足。厳格形は `add_optional_strict_single_break()` | ✅ 実装済み（厳格形は `options.strict_single_break.enabled` で ON/OFF 可能・初期 OFF） |
 | SC-001 | — | ⬜ 未実装（P6 で目的関数として実装） |
 | SC-002 | — | ⬜ 未実装（P6 で目的関数として実装） |
 | SC-003 | `add_optional_weekly_hours_check()` | ✅ 実装済み（有効化時にハード制約として付与。3 章注記参照） |

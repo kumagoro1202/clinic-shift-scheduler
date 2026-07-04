@@ -41,6 +41,7 @@ staff: [ ... ]           # スタッフ定義
 |------|-----|------|--------|
 | `weekly_hours_check.enabled` | bool | 週労働時間チェックの ON/OFF（FR-07） | false |
 | `weekly_hours_check.limit_hours` | int | 週の上限労働時間 | 40 |
+| `strict_single_break.enabled` | bool | HC-006 厳格形（同時複数名休憩の一律禁止）の ON/OFF | false |
 
 ## slot_minutes（時間解像度）
 
