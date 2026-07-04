@@ -42,6 +42,8 @@ staff: [ ... ]           # スタッフ定義
 | `weekly_hours_check.enabled` | bool | 週労働時間チェックの ON/OFF（FR-07） | false |
 | `weekly_hours_check.limit_hours` | int | 週の上限労働時間 | 40 |
 | `strict_single_break.enabled` | bool | HC-006 厳格形（同時複数名休憩の一律禁止）の ON/OFF | false |
+| `optimization_mode` | str | 最適化モード（重みプリセット切替。`balance`/`skill_focus`/`days_focus`） | balance |
+| `skill_balance.target_avg` | map | SC-001 の目標平均スコアの上書き（スキルキー→値）。未指定のスキルは全スタッフ平均を使用 | {} |
 
 ## slot_minutes（時間解像度）
 
@@ -111,11 +113,10 @@ clinic_hours:
 | `vacations` | list | 休暇。`{ weekday: mon〜sun, kind: full/am/pm }` |
 
 スキルスコアは要求事項定義書 6.2節の 4 項目（リハ室・受付午前・受付午後・
-総合対応力）に対応する。バッチ1（本バージョン）では「スコア 0 = 配置不可、
-1 以上 = 配置可能」の資格フラグとしてのみ使用し、スコアの大小を用いた
-スキルバランス最適化（ソフト制約）は後続フェーズで実装する。
+総合対応力）に対応する。「スコア 0 = 配置不可、1 以上 = 配置可能」の資格フラグに加え、
+SC-001（P6-4）でスコアの大小を用いたスキルバランス最適化（ソフト制約）に使用する。
 
-## 制約エンジンとの対応（バッチ1で実装済みのハード制約）
+## 制約エンジンとの対応（実装済みのハード制約・ソフト制約）
 
 | ID | 内容 | 参照する設定 |
 |----|------|-------------|
@@ -123,6 +124,7 @@ clinic_hours:
 | HC-002 | 同一時刻に複数エリアへ配置しない | （設定不要・常時適用） |
 | HC-003 | 勤務時間制約（拘束9h・休憩1h・実働8h・週勤務日数） | `work_rules` / `shift_patterns` / `staff.weekly_workdays` |
 | HC-004 | 休暇・休日の制約 | `staff.vacations` / `day_types` |
+| SC-001 | スキルバランス（配置スキル合計と目標合計の乖離を最小化） | `staff.skills` / `options.skill_balance.target_avg` / `options.optimization_mode` |
 
 ## 未確定事項（要求事項定義書 10章）との対応
 

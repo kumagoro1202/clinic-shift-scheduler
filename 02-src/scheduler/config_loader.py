@@ -16,6 +16,9 @@ DAY_TYPES = ("full", "short", "half", "closed")
 VACATION_KINDS = ("full", "am", "pm")
 SUPPORTED_SCHEMA_VERSION = 1
 
+# 最適化モード（重みプリセット切替。internal/engine-design.md 5章）
+OPTIMIZATION_MODES = ("balance", "skill_focus", "days_focus")
+
 # 午前休/午後休の境界（法令等に由来しない内部規約値。必要になれば設定化する）
 AM_PM_BOUNDARY_MINUTES = 13 * 60
 
@@ -77,6 +80,12 @@ class StrictSingleBreak:
 
 
 @dataclass(frozen=True)
+class SkillBalance:
+    # スキルキー -> 目標平均スコアの上書き値。未指定のスキルは全スタッフ平均を使う
+    target_avg: dict[str, float]
+
+
+@dataclass(frozen=True)
 class ShiftPattern:
     name: str
     day_types: tuple[str, ...]
@@ -131,6 +140,8 @@ class Config:
     work_rules: WorkRules
     weekly_hours_check: WeeklyHoursCheck
     strict_single_break: StrictSingleBreak
+    optimization_mode: str
+    skill_balance: SkillBalance
     slot_minutes: int
     day_types: dict[str, str]  # weekday -> day_type
     clinic_hours: dict[str, dict[str, TimeRange | None]]
@@ -326,6 +337,19 @@ def load_config(path: str | Path) -> Config:
     strict_single_break = StrictSingleBreak(
         enabled=bool(strict_raw.get("enabled", False)),
     )
+    optimization_mode = str(options_raw.get("optimization_mode", "balance"))
+    if optimization_mode not in OPTIMIZATION_MODES:
+        raise ConfigError(
+            f"options.optimization_mode が不正です: {optimization_mode!r}"
+            f"（対応値: {OPTIMIZATION_MODES}）"
+        )
+    skill_balance_raw = options_raw.get("skill_balance", {}) or {}
+    skill_balance = SkillBalance(
+        target_avg={
+            str(k): float(v)
+            for k, v in (skill_balance_raw.get("target_avg", {}) or {}).items()
+        }
+    )
 
     patterns = _load_patterns(
         _require(raw, "shift_patterns", "設定"), work_rules, slot_minutes
@@ -337,6 +361,8 @@ def load_config(path: str | Path) -> Config:
         work_rules=work_rules,
         weekly_hours_check=weekly_hours_check,
         strict_single_break=strict_single_break,
+        optimization_mode=optimization_mode,
+        skill_balance=skill_balance,
         slot_minutes=slot_minutes,
         day_types=day_types,
         clinic_hours=_load_clinic_hours(raw.get("clinic_hours", {}) or {}),
