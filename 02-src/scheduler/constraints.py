@@ -5,6 +5,7 @@
     HC-002: スタッフが同時に複数エリアへ配置されない
     HC-003: 勤務時間制約（拘束9h・休憩1h・実働8h・週勤務日数上限）
     HC-004: 休暇・休日の制約（設定で指定）
+    HC-007: 出勤(works=1)日には最低1つの配置(assign)を伴うこと（空出勤の防止）
 
 オプション制約:
     週労働時間チェック（options.weekly_hours_check、初期 OFF）
@@ -145,6 +146,7 @@ def _build(
     add_hc002_single_assignment(sm)
     add_hc003_work_pattern(sm)
     add_hc004_vacations(sm)
+    add_hc007_no_empty_attendance(sm)
     add_optional_strict_single_break(sm)
     add_optional_weekly_hours_check(sm)
     return sm
@@ -358,6 +360,31 @@ def add_hc004_vacations(sm: ShiftModel) -> None:
                     key = (staff.name, day.key, area.name, slot)
                     if key in sm.assign:
                         sm.model.add(sm.assign[key] == 0)
+
+
+def add_hc007_no_empty_attendance(sm: ShiftModel) -> None:
+    """HC-007: 出勤(works=1)日には最低1つの配置(assign)を伴うこと（空出勤の防止）。
+
+    works自体にコストがかからず、SC-004（勤務回数均等化）等のworks基準の
+    均等化圧力が働く場合、配置を一切伴わない出勤（works=1, assign=0）を
+    追加するだけで目的関数を改善できてしまう縮退解が最適とみなされうる
+    （P6-6で観測。詳細は `internal/engine-design.md` 3章の注記を参照）。
+    各（staff, 日）について「その日のworks合計 ≤ その日のassign合計」を
+    課し、この状態を構造的に禁止する。週次・月次共通のDayContext抽象で
+    動作する。
+    """
+    for staff in sm.config.staff:
+        for day in sm.days:
+            patterns = patterns_for_day(sm.config, day)
+            day_works = sum(
+                sm.works[(staff.name, day.key, p.name)] for p in patterns
+            )
+            day_assign = sum(
+                var
+                for (name, key, _, _), var in sm.assign.items()
+                if name == staff.name and key == day.key
+            )
+            sm.model.add(day_works <= day_assign)
 
 
 def add_optional_strict_single_break(sm: ShiftModel) -> None:
