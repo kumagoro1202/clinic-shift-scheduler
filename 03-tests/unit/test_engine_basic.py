@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from scheduler import config_loader, engine
+from scheduler import config_loader, constraints, engine
 
 SAMPLE_CONFIG = (
     Path(__file__).resolve().parents[2] / "config" / "samples" / "sample_clinic.yaml"
@@ -140,3 +140,71 @@ def test_vacation_respected(config, result):
                 f"{staff.name} の {vacation.weekday} は終日休暇のはずですが"
                 f"勤務が割り当てられています"
             )
+
+
+def test_hc005_no_assign_variable_for_unqualified_staff(config):
+    """HC-005: 配置不可エリア（必要スキルが全て0）の assign 変数が生成されないこと。
+
+    現状 HC-005 は変数生成段階での除外（暗黙的実装）のため、生成された
+    変数集合そのものを検証する。sample_clinic.yaml はスタッフB・Eが
+    rehab 不可、スタッフCが reception 不可となるよう構成されている。
+    """
+    sm = constraints.build_model(config)
+
+    unqualified_pairs = [
+        (staff, area)
+        for staff in config.staff
+        for area in config.areas
+        if not staff.qualifies(area)
+    ]
+    assert unqualified_pairs, "テスト前提: 配置不可の (staff, area) 組が存在しません"
+
+    for staff, area in unqualified_pairs:
+        leaked = [
+            key
+            for key in sm.assign
+            if key[0] == staff.name and key[2] == area.name
+        ]
+        assert not leaked, (
+            f"{staff.name} は {area.name} に配置不可のはずですが、"
+            f"assign 変数が生成されています: {leaked}"
+        )
+
+    # サニティチェック: 配置可能な組では変数が実際に生成されていること
+    # （除外ロジックが常に真になっていないことの確認）
+    qualified_pairs = [
+        (staff, area)
+        for staff in config.staff
+        for area in config.areas
+        if staff.qualifies(area)
+    ]
+    assert qualified_pairs, "テスト前提: 配置可能な (staff, area) 組が存在しません"
+    for staff, area in qualified_pairs:
+        present = [
+            key
+            for key in sm.assign
+            if key[0] == staff.name and key[2] == area.name
+        ]
+        assert present, (
+            f"{staff.name} は {area.name} に配置可能なはずですが、"
+            f"assign 変数が1つも生成されていません"
+        )
+
+
+def test_hc005_solution_respects_qualification(config, result):
+    """HC-005: 生成された解において、配置不可エリアへの配置が発生していないこと。"""
+    areas = {area.name: area for area in config.areas}
+    staff_by_name = {staff.name: staff for staff in config.staff}
+
+    checked_any = False
+    for day_schedule in result["schedule"].values():
+        for staff_name, entry in day_schedule.items():
+            staff = staff_by_name[staff_name]
+            for segment in entry["work"]:
+                area = areas[segment["area"]]
+                checked_any = True
+                assert staff.qualifies(area), (
+                    f"{staff_name} は {area.name} に配置不可のはずですが、"
+                    f"解で {segment['start']}-{segment['end']} に配置されています"
+                )
+    assert checked_any, "テスト前提: 検証対象の配置セグメントが解に存在しません"
