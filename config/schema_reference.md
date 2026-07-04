@@ -125,6 +125,7 @@ SC-001（P6-4）でスコアの大小を用いたスキルバランス最適化�
 | HC-003 | 勤務時間制約（拘束9h・休憩1h・実働8h・週勤務日数） | `work_rules` / `shift_patterns` / `staff.weekly_workdays` |
 | HC-004 | 休暇・休日の制約 | `staff.vacations` / `day_types` |
 | SC-001 | スキルバランス（配置スキル合計と目標合計の乖離を最小化） | `staff.skills` / `options.skill_balance.target_avg` / `options.optimization_mode` |
+| SC-002 | 連続配置優先（同一日内のエリア切替・中抜けの最小化） | （設定不要・重みは全モード固定30） |
 
 ## 未確定事項（要求事項定義書 10章）との対応
 

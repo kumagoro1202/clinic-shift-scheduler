@@ -74,14 +74,18 @@ def _solve(sm: ShiftModel, time_limit_seconds: float) -> dict:
 
 
 def _set_objective(sm: ShiftModel) -> None:
-    """必要人数を満たす範囲で、勤務日数・SC-001スキルバランス乖離・配置スロット数を
-    最小化する（`internal/engine-design.md` 4.1節。SC-002/004/005はP6-5〜7で追加）。
+    """必要人数を満たす範囲で、勤務日数・SC-001スキルバランス乖離・
+    SC-002連続配置ブロック数・配置スロット数を最小化する
+    （`internal/engine-design.md` 4.1節。SC-004/005はP6-6〜7で追加）。
     """
     sc001_penalty = objectives.add_sc001_skill_balance(sm)
     sc001_weight = objectives.weight_for(sm.config.optimization_mode, "sc001")
+    sc002_penalty = objectives.add_sc002_continuous_placement(sm)
+    sc002_weight = objectives.weight_for(sm.config.optimization_mode, "sc002")
     sm.model.minimize(
         _WORKDAY_WEIGHT * sum(sm.works.values())
         + sc001_weight * sc001_penalty
+        + sc002_weight * sc002_penalty
         + sum(sm.assign.values())
     )
 
