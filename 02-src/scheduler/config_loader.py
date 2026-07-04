@@ -72,6 +72,11 @@ class WeeklyHoursCheck:
 
 
 @dataclass(frozen=True)
+class StrictSingleBreak:
+    enabled: bool
+
+
+@dataclass(frozen=True)
 class ShiftPattern:
     name: str
     day_types: tuple[str, ...]
@@ -125,6 +130,7 @@ class Staff:
 class Config:
     work_rules: WorkRules
     weekly_hours_check: WeeklyHoursCheck
+    strict_single_break: StrictSingleBreak
     slot_minutes: int
     day_types: dict[str, str]  # weekday -> day_type
     clinic_hours: dict[str, dict[str, TimeRange | None]]
@@ -316,6 +322,10 @@ def load_config(path: str | Path) -> Config:
         enabled=bool(weekly_raw.get("enabled", False)),
         limit_hours=int(weekly_raw.get("limit_hours", 40)),
     )
+    strict_raw = options_raw.get("strict_single_break", {}) or {}
+    strict_single_break = StrictSingleBreak(
+        enabled=bool(strict_raw.get("enabled", False)),
+    )
 
     patterns = _load_patterns(
         _require(raw, "shift_patterns", "設定"), work_rules, slot_minutes
@@ -326,6 +336,7 @@ def load_config(path: str | Path) -> Config:
     config = Config(
         work_rules=work_rules,
         weekly_hours_check=weekly_hours_check,
+        strict_single_break=strict_single_break,
         slot_minutes=slot_minutes,
         day_types=day_types,
         clinic_hours=_load_clinic_hours(raw.get("clinic_hours", {}) or {}),

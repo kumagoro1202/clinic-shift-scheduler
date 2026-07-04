@@ -4,9 +4,11 @@
 のみを使用する。実在データは使用しない。
 """
 
+import dataclasses
 from pathlib import Path
 
 import pytest
+from ortools.sat.python import cp_model
 
 from scheduler import config_loader, constraints, engine
 
@@ -31,6 +33,7 @@ def test_config_loader_loads_sample(config):
     assert config.work_rules.break_minutes == 60
     assert config.work_rules.working_hours == 8
     assert config.weekly_hours_check.enabled is False
+    assert config.strict_single_break.enabled is False
     assert config.day_types["sun"] == "closed"
     assert {a.name for a in config.areas} == {"rehab", "reception"}
     assert len(config.staff) == 5
@@ -208,3 +211,68 @@ def test_hc005_solution_respects_qualification(config, result):
                     f"解で {segment['start']}-{segment['end']} に配置されています"
                 )
     assert checked_any, "テスト前提: 検証対象の配置セグメントが解に存在しません"
+
+
+def _breaks_at_slot(sm: constraints.ShiftModel, weekday: str) -> tuple[int, list]:
+    """指定曜日で最も休憩候補スタッフ数が多いスロットとその変数群を返す。"""
+    starts_at_slot: dict[int, list] = {}
+    for (_, day, slot), var in sm.break_start.items():
+        if day == weekday:
+            starts_at_slot.setdefault(slot, []).append(var)
+    return max(starts_at_slot.items(), key=lambda item: len(item[1]))
+
+
+def test_hc006_off_allows_simultaneous_breaks(config):
+    """HC-006 厳格形 OFF（初期値）では、複数スタッフの同時休憩開始を禁止しないこと。
+
+    敵対的検証: 同一スロットで開始する break_start を2件強制的に1へ固定しても
+    解が存在すること（= OFF では厳格形の制約が課されていないこと）を確認する。
+    """
+    assert config.strict_single_break.enabled is False
+    sm = constraints.build_model(config)
+    weekday = "mon"
+
+    target_slot, vars_at_slot = _breaks_at_slot(sm, weekday)
+    assert len(vars_at_slot) >= 2, (
+        "テスト前提: 月曜の同一スロットに休憩候補が2人分以上必要です"
+    )
+    for var in vars_at_slot[:2]:
+        sm.model.add(var == 1)
+
+    solver = cp_model.CpSolver()
+    status = solver.solve(sm.model)
+    assert status in (cp_model.OPTIMAL, cp_model.FEASIBLE), (
+        "strict_single_break.enabled=False では同時休憩を禁止しないため、"
+        "2名同時休憩を強制しても解が存在するはずです"
+    )
+
+
+def test_hc006_on_prevents_simultaneous_breaks(config):
+    """HC-006 厳格形 ON では、同一スロットで開始する複数スタッフの休憩が禁止されること。
+
+    OFF 時と同じ2件の break_start 固定を行い、今度は INFEASIBLE になることを
+    確認する（制約を一時的に無効化(OFF)すればテストが通り、有効化(ON)で意図通り
+    機能することを併せて確認する敵対的検証）。
+    """
+    strict_config = dataclasses.replace(
+        config,
+        strict_single_break=dataclasses.replace(
+            config.strict_single_break, enabled=True
+        ),
+    )
+    sm = constraints.build_model(strict_config)
+    weekday = "mon"
+
+    target_slot, vars_at_slot = _breaks_at_slot(sm, weekday)
+    assert len(vars_at_slot) >= 2, (
+        "テスト前提: 月曜の同一スロットに休憩候補が2人分以上必要です"
+    )
+    for var in vars_at_slot[:2]:
+        sm.model.add(var == 1)
+
+    solver = cp_model.CpSolver()
+    status = solver.solve(sm.model)
+    assert status == cp_model.INFEASIBLE, (
+        "strict_single_break.enabled=True では同一スロットの2名同時休憩は"
+        "禁止されているはずです"
+    )

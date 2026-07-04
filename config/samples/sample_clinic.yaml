@@ -24,6 +24,8 @@ options:
   weekly_hours_check:
     enabled: false # 週40時間チェック（初期OFF）
     limit_hours: 40
+  strict_single_break:
+    enabled: false # HC-006厳格形: 同時複数名休憩の一律禁止（初期OFF）
 
 # 時間解像度（分）。診療時間・必要人数の境界はこの倍数に揃えること
 slot_minutes: 30
