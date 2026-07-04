@@ -4,10 +4,10 @@
     minimize  Σ_i weight_i × penalty_i  （i ∈ SC-001, SC-002, SC-004, SC-005）
             + ε × Σ assign
 
-本モジュールは SC-001（スキルバランス）のみを実装する。他の SC は
-P6-5〜P6-8 で追加する。週次モデル（曜日キー）・月次モデル（日付キー）双方の
-`DayContext` に対して同一コードで動作する（`ShiftModel.days` / `.weekday` /
-`.key` のみを参照するため）。
+本モジュールは SC-001（スキルバランス）・SC-002（連続配置優先）を実装する。
+他の SC は P6-6〜P6-8 で追加する。週次モデル（曜日キー）・月次モデル
+（日付キー）双方の `DayContext` に対して同一コードで動作する
+（`ShiftModel.days` / `.weekday` / `.key` のみを参照するため）。
 """
 
 from __future__ import annotations
@@ -17,11 +17,13 @@ from ortools.sat.python import cp_model
 from .config_loader import AM_PM_BOUNDARY_MINUTES, OPTIMIZATION_MODES, Area, Config, RequirementBand
 from .constraints import ShiftModel
 
-# 重みプリセット（`internal/engine-design.md` 5章）。SC-002/004/005はP6-5〜7で追加。
+# 重みプリセット（`internal/engine-design.md` 5章）。SC-004/005はP6-6〜7で追加。
+# SC-002は全モードで重み30固定（全体スケールに対する影響を抑え、エリア切替の
+# 最小化を「補助的な誘導」に留める設計判断。engine-design.md 5章）。
 WEIGHT_PRESETS: dict[str, dict[str, int]] = {
-    "balance": {"sc001": 100},
-    "skill_focus": {"sc001": 300},
-    "days_focus": {"sc001": 50},
+    "balance": {"sc001": 100, "sc002": 30},
+    "skill_focus": {"sc001": 300, "sc002": 30},
+    "days_focus": {"sc001": 50, "sc002": 30},
 }
 
 
@@ -105,5 +107,45 @@ def add_sc001_skill_balance(sm: ShiftModel) -> cp_model.LinearExprT:
                     sm.model.add(dev >= skill_sum - target_total)
                     sm.model.add(dev >= target_total - skill_sum)
                     penalty_terms.append(dev)
+
+    return sum(penalty_terms) if penalty_terms else 0
+
+
+def add_sc002_continuous_placement(sm: ShiftModel) -> cp_model.LinearExprT:
+    """SC-002: 同一日内のエリア切替回数（中抜けを含む）を最小化する。
+
+    各（staff, 日, エリア）について、日内のスロット列（`sm.slots[day.key]` の
+    ソート順）を隣接ペアで走査し、開始検出変数 `start ≥ assign[t] − assign[t−step]`
+    を導入する。日内の `Σ start`（= 連続配置ブロック数）をペナルティとする
+    （ブロック数最小化はエリア切替・中抜けの最小化と等価。`engine-design.md` 4.2節）。
+
+    ウィンドウの最初のスロット（隣接ペアの片方の assign 変数が存在しない箇所）は
+    ペナルティ対象外とする（勤務開始自体は「切替」ではないため）。
+    重み付けは呼び出し側（`engine.py`）が `weight_for()` で行う。
+
+    Returns:
+        `Σ start`（生成した start 変数が1つもなければ 0）。
+    """
+    config = sm.config
+    step = config.slot_minutes
+    penalty_terms: list[cp_model.IntVar] = []
+
+    for day in sm.days:
+        slots = sm.slots[day.key]
+        for staff in config.staff:
+            for area in config.areas:
+                for i in range(1, len(slots)):
+                    prev_slot, curr_slot = slots[i - 1], slots[i]
+                    if curr_slot - prev_slot != step:
+                        continue
+                    prev_key = (staff.name, day.key, area.name, prev_slot)
+                    curr_key = (staff.name, day.key, area.name, curr_slot)
+                    if prev_key not in sm.assign or curr_key not in sm.assign:
+                        continue
+                    start = sm.model.new_bool_var(
+                        f"sc002_start_{staff.name}_{day.key}_{area.name}_{curr_slot}"
+                    )
+                    sm.model.add(start >= sm.assign[curr_key] - sm.assign[prev_key])
+                    penalty_terms.append(start)
 
     return sum(penalty_terms) if penalty_terms else 0
