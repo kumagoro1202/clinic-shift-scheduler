@@ -11,9 +11,6 @@ from .calendar import expand_month, load_monthly_schedule
 from .config_loader import Config, format_time, load_config
 from .constraints import ShiftModel, build_model, build_monthly_model, patterns_for_day
 
-# 勤務日数の最小化を配置スロット最小化より優先する重み
-_WORKDAY_WEIGHT = 100
-
 
 def run(config: Config, time_limit_seconds: float = 60.0) -> dict:
     """1 週間分のシフトを生成して返す。
@@ -74,18 +71,20 @@ def _solve(sm: ShiftModel, time_limit_seconds: float) -> dict:
 
 
 def _set_objective(sm: ShiftModel) -> None:
-    """必要人数を満たす範囲で、勤務日数・SC-001スキルバランス乖離・
-    SC-002連続配置ブロック数・配置スロット数を最小化する
-    （`internal/engine-design.md` 4.1節。SC-004/005はP6-6〜7で追加）。
+    """必要人数を満たす範囲で、SC-001スキルバランス乖離・SC-002連続配置ブロック数・
+    SC-004勤務回数均等化を最小化しつつ、配置スロット数をタイブレークとして
+    最小化する（`internal/engine-design.md` 4.1節。SC-005はP6-7で追加）。
     """
     sc001_penalty = objectives.add_sc001_skill_balance(sm)
     sc001_weight = objectives.weight_for(sm.config.optimization_mode, "sc001")
     sc002_penalty = objectives.add_sc002_continuous_placement(sm)
     sc002_weight = objectives.weight_for(sm.config.optimization_mode, "sc002")
+    sc004_penalty = objectives.add_sc004_workday_balance(sm)
+    sc004_weight = objectives.weight_for(sm.config.optimization_mode, "sc004")
     sm.model.minimize(
-        _WORKDAY_WEIGHT * sum(sm.works.values())
-        + sc001_weight * sc001_penalty
+        sc001_weight * sc001_penalty
         + sc002_weight * sc002_penalty
+        + sc004_weight * sc004_penalty
         + sum(sm.assign.values())
     )
 
