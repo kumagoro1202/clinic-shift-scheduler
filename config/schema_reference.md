@@ -136,3 +136,39 @@ clinic_hours:
 | Q-05（時差出勤） | `shift_patterns`（early / late） | 08:30 出勤と 09:30 出勤の 2 種 |
 | Q-06（受付必要人数） | `areas.requirements` | テスト用縮小値（受付 2 名） |
 | Q-08（パート勤務） | `staff.employment` / `weekly_workdays` | パート 2 名・週 5 日 |
+
+## 月次入力（schema_version: 2・P6-3）
+
+対象月の曜日テンプレートを日付列へ展開するための追加入力。
+`schema_version: 1`（本ファイル前半）とは別ファイル（例: `schedule-202608.yaml`）で管理する。
+
+サンプル: [`config/samples/sample_schedule_202608.yaml`](samples/sample_schedule_202608.yaml)
+
+```yaml
+schema_version: 2
+target_month: "2026-08"
+calendar_overrides:
+  - { date: "2026-08-11", day_type: closed, reason: "祝日" }
+vacations:
+  - { staff: "スタッフA", date: "2026-08-05", kind: full, paid: true }
+```
+
+| キー | 型 | 説明 |
+|------|-----|------|
+| `target_month` | "YYYY-MM" | 生成対象の月 |
+| `calendar_overrides[].date` | "YYYY-MM-DD" | 例外日（対象月内であること） |
+| `calendar_overrides[].day_type` | str | その日の日種別（`full`/`short`/`half`/`closed`） |
+| `calendar_overrides[].reason` | str | 表示用の理由（任意） |
+| `vacations[].staff` | str | スタッフ名（`staff` に存在すること） |
+| `vacations[].date` | "YYYY-MM-DD" | 休暇日（対象月内であること） |
+| `vacations[].kind` | str | `full`（終日）/ `am`（午前休）/ `pm`（午後休） |
+| `vacations[].paid` | bool | 有給か否か（表示用・制約計算には影響しない。任意・初期値 false） |
+
+日付展開の規則（`scheduler/calendar.py` の `expand_month`）:
+
+1. 対象月の各日について曜日から `day_types` を引き、基本の日種別を決める
+2. `calendar_overrides` に該当日があれば日種別を上書きする
+3. `closed` の日はシフト生成対象から除外する
+
+検証ルール（V-10〜V-12）: `calendar_overrides` / `vacations` の日付は対象月内であること、
+`vacations[].staff` は `staff` に存在すること、同一スタッフ・同一日の休暇重複がないこと。
