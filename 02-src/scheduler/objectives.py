@@ -4,10 +4,10 @@
     minimize  Σ_i weight_i × penalty_i  （i ∈ SC-001, SC-002, SC-004, SC-005）
             + ε × Σ assign
 
-本モジュールは SC-001（スキルバランス）・SC-002（連続配置優先）を実装する。
-他の SC は P6-6〜P6-8 で追加する。週次モデル（曜日キー）・月次モデル
-（日付キー）双方の `DayContext` に対して同一コードで動作する
-（`ShiftModel.days` / `.weekday` / `.key` のみを参照するため）。
+本モジュールは SC-001（スキルバランス）・SC-002（連続配置優先）・
+SC-004（勤務回数均等化）を実装する。SC-005 は P6-7 で追加する。週次モデル
+（曜日キー）・月次モデル（日付キー）双方の `DayContext` に対して同一コードで
+動作する（`ShiftModel.days` / `.weekday` / `.key` のみを参照するため）。
 """
 
 from __future__ import annotations
@@ -17,13 +17,13 @@ from ortools.sat.python import cp_model
 from .config_loader import AM_PM_BOUNDARY_MINUTES, OPTIMIZATION_MODES, Area, Config, RequirementBand
 from .constraints import ShiftModel
 
-# 重みプリセット（`internal/engine-design.md` 5章）。SC-004/005はP6-6〜7で追加。
+# 重みプリセット（`internal/engine-design.md` 5章）。SC-005はP6-7で追加。
 # SC-002は全モードで重み30固定（全体スケールに対する影響を抑え、エリア切替の
 # 最小化を「補助的な誘導」に留める設計判断。engine-design.md 5章）。
 WEIGHT_PRESETS: dict[str, dict[str, int]] = {
-    "balance": {"sc001": 100, "sc002": 30},
-    "skill_focus": {"sc001": 300, "sc002": 30},
-    "days_focus": {"sc001": 50, "sc002": 30},
+    "balance": {"sc001": 100, "sc002": 30, "sc004": 100},
+    "skill_focus": {"sc001": 300, "sc002": 30, "sc004": 50},
+    "days_focus": {"sc001": 50, "sc002": 30, "sc004": 300},
 }
 
 
@@ -149,3 +149,43 @@ def add_sc002_continuous_placement(sm: ShiftModel) -> cp_model.LinearExprT:
                     penalty_terms.append(start)
 
     return sum(penalty_terms) if penalty_terms else 0
+
+
+def add_sc004_workday_balance(sm: ShiftModel) -> cp_model.LinearExprT:
+    """SC-004: 全 staff の勤務日数（`Σ works`）の最大最小差を最小化する。
+
+    各 staff について `Σ works(staff)`（`sm.works` は当該 staff・当該日の
+    どのパターンで勤務するかを表す bool 変数で、日ごとに高々1つが真になる
+    ため、日キーを問わず合計すれば勤務日数になる）を求め、全 staff に共通の
+    整数変数 `max_days ≥ Σ works(staff)` ・ `min_days ≤ Σ works(staff)` を
+    導入し、`max_days − min_days`（最大最小差）をペナルティとする
+    （`engine-design.md` 4.2節）。
+
+    `weekly_workdays` 比での正規化は行わない（パート・正職員の基準日数が
+    異なる場合の影響はサンプルデータで評価済み。テスト・実行結果を参照）。
+    重み付けは呼び出し側（`engine.py`）が `weight_for()` で行う。
+
+    Returns:
+        `max_days − min_days`（staff が1名もいなければ 0）。
+    """
+    config = sm.config
+    if not config.staff:
+        return 0
+
+    max_total = len(sm.days)
+    totals_per_staff: list[cp_model.LinearExprT] = []
+    for staff in config.staff:
+        terms = [
+            var
+            for (name, _day_key, _pattern_name), var in sm.works.items()
+            if name == staff.name
+        ]
+        totals_per_staff.append(sum(terms) if terms else 0)
+
+    max_days = sm.model.new_int_var(0, max_total, "sc004_max_days")
+    min_days = sm.model.new_int_var(0, max_total, "sc004_min_days")
+    for total in totals_per_staff:
+        sm.model.add(max_days >= total)
+        sm.model.add(min_days <= total)
+
+    return max_days - min_days
