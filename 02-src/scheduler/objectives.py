@@ -5,7 +5,7 @@
             + ε × Σ assign
 
 本モジュールは SC-001（スキルバランス）・SC-002（連続配置優先）・
-SC-004（勤務回数均等化）を実装する。SC-005 は P6-7 で追加する。週次モデル
+SC-004（勤務回数均等化）・SC-005（半日診療日の均等分散）を実装する。週次モデル
 （曜日キー）・月次モデル（日付キー）双方の `DayContext` に対して同一コードで
 動作する（`ShiftModel.days` / `.weekday` / `.key` のみを参照するため）。
 """
@@ -17,13 +17,13 @@ from ortools.sat.python import cp_model
 from .config_loader import AM_PM_BOUNDARY_MINUTES, OPTIMIZATION_MODES, Area, Config, RequirementBand
 from .constraints import ShiftModel
 
-# 重みプリセット（`internal/engine-design.md` 5章）。SC-005はP6-7で追加。
+# 重みプリセット（`internal/engine-design.md` 5章）。
 # SC-002は全モードで重み30固定（全体スケールに対する影響を抑え、エリア切替の
 # 最小化を「補助的な誘導」に留める設計判断。engine-design.md 5章）。
 WEIGHT_PRESETS: dict[str, dict[str, int]] = {
-    "balance": {"sc001": 100, "sc002": 30, "sc004": 100},
-    "skill_focus": {"sc001": 300, "sc002": 30, "sc004": 50},
-    "days_focus": {"sc001": 50, "sc002": 30, "sc004": 300},
+    "balance": {"sc001": 100, "sc002": 30, "sc004": 100, "sc005": 50},
+    "skill_focus": {"sc001": 300, "sc002": 30, "sc004": 50, "sc005": 25},
+    "days_focus": {"sc001": 50, "sc002": 30, "sc004": 300, "sc005": 100},
 }
 
 
@@ -189,3 +189,42 @@ def add_sc004_workday_balance(sm: ShiftModel) -> cp_model.LinearExprT:
         sm.model.add(min_days <= total)
 
     return max_days - min_days
+
+
+def add_sc005_half_day_workday_balance(sm: ShiftModel) -> cp_model.LinearExprT:
+    """SC-005: 半日診療日（`day.day_type == "half"`）における全 staff の出勤回数
+    （`Σ works`、対象日を半日診療日に限定）の最大最小差を最小化する。
+
+    SC-004（勤務回数均等化）と同形だが、対象日を半日診療日に限定する点のみ
+    異なる（`engine-design.md` 4.2節。木曜・土曜出勤の偏りは SC-004 の総日数
+    均等化では防げないため独立の制約とする）。HC-007（出勤日には配置を伴う
+    ことの強制）は日種別を問わず全日に適用済みのため、SC-005 についても
+    空出勤による縮退は構造的に防止されている（`engine-design.md` 3.1節）。
+    重み付けは呼び出し側（`engine.py`）が `weight_for()` で行う。
+
+    Returns:
+        `max_half_days − min_half_days`（staff が1名もいない、または半日診療日が
+        1日もなければ 0）。
+    """
+    config = sm.config
+    half_day_keys = {day.key for day in sm.days if day.day_type == "half"}
+    if not config.staff or not half_day_keys:
+        return 0
+
+    max_total = len(half_day_keys)
+    totals_per_staff: list[cp_model.LinearExprT] = []
+    for staff in config.staff:
+        terms = [
+            var
+            for (name, day_key, _pattern_name), var in sm.works.items()
+            if name == staff.name and day_key in half_day_keys
+        ]
+        totals_per_staff.append(sum(terms) if terms else 0)
+
+    max_half_days = sm.model.new_int_var(0, max_total, "sc005_max_half_days")
+    min_half_days = sm.model.new_int_var(0, max_total, "sc005_min_half_days")
+    for total in totals_per_staff:
+        sm.model.add(max_half_days >= total)
+        sm.model.add(min_half_days <= total)
+
+    return max_half_days - min_half_days
