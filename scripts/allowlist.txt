@@ -14,3 +14,9 @@ users.noreply.github.com
 ×鈴木看護師 → ○看護師A
 ×佐藤さん → ○受付A
 ×高橋PT → ○リハA
+
+# リポジトリ名・スキル名としての正規参照（org-shogun 由来の固有名詞）
+# ※このシステム自体の設計を扱う内部ドキュメントを公開しない限り、原則ここは増やさない
+org-shogun
+shogun-hearing-to-decision-package
+shogun-project-status-analyzer

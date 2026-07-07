@@ -5,9 +5,11 @@ set -e
 
 FAIL=0
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PATTERNS_FILE="$SCRIPT_DIR/pii-patterns.txt"
-BLOCKLIST_FILE="$SCRIPT_DIR/names-blocklist.txt"
-ALLOWLIST_FILE="$SCRIPT_DIR/allowlist.txt"
+# 定義ファイルは環境変数で差し替え可能にする（--self-test の故意破壊テストが
+# 空のパターン定義で本体を再帰呼び出しし、canary機構の健全性を検証するため）
+PATTERNS_FILE="${PII_PATTERNS_FILE:-$SCRIPT_DIR/pii-patterns.txt}"
+BLOCKLIST_FILE="${PII_BLOCKLIST_FILE:-$SCRIPT_DIR/names-blocklist.txt}"
+ALLOWLIST_FILE="${PII_ALLOWLIST_FILE:-$SCRIPT_DIR/allowlist.txt}"
 
 check_allowlist() {
   local content="$1"
@@ -59,7 +61,49 @@ if [ "$1" = "--self-test" ]; then
     exit 1
   fi
   echo "--- true negative OK: clean fixture passed without false positives ---"
-  echo "✅ SELF-TEST PASSED: true positive + true negative both as expected."
+
+  # 内部用語（組織ロール名・内部ID）canary: 追加パターンの検知能力をパターン系統ごとに
+  # 個別検証する。用語は \u エスケープ・文字列連結で実行時に組み立て、本スクリプト自身が
+  # スキャン対象になっても自己検知しないようにしている（既存 canary と同じ方針）。
+  # 子プロセスの検知出力は /dev/null へ捨て、CIログに用語が残らないようにする。
+  TERM_FILE=$(mktemp /tmp/pii-term.XXXXXX.md)
+  ALLOWED_FILE=$(mktemp /tmp/pii-term-allowed.XXXXXX.md)
+  EMPTY_PATTERNS=$(mktemp /tmp/pii-empty.XXXXXX)
+  trap 'rm -f "$CANARY_FILE" "$CLEAN_FILE" "$TERM_FILE" "$ALLOWED_FILE" "$EMPTY_PATTERNS"' EXIT
+
+  TERM_JA=$(printf '\u8ecd\u5e2b')             # 組織ロール名（日本語・コードポイント組み立て）
+  TERM_ROMAJI=$(printf '%s%s' 'gun' 'shi')     # 組織ロール名（ローマ字・単語境界確認）
+  TERM_CMD=$(printf '%s%s' 'cmd' '_123')       # 内部タスクID
+  TERM_AGENT=$(printf '%s%s' 'ashi' 'garu5')   # 内部エージェントID（ロール名+号数字）
+  for term in "$TERM_JA" "$TERM_ROMAJI" "$TERM_CMD" "$TERM_AGENT"; do
+    printf 'internal term canary: %s\n' "$term" > "$TERM_FILE"
+    if bash "$0" "$TERM_FILE" > /dev/null; then
+      echo "❌ SELF-TEST FAILED: an internal-term canary was NOT detected. Scanner is broken."
+      exit 1
+    fi
+  done
+  echo "--- true positive OK: all internal-term canaries were correctly detected ---"
+
+  # 真陰性: allowlist 済みの正規参照（リポジトリ名）を含む行は素通りすること
+  printf 'see the %s%s repository for details\n' 'org-sho' 'gun' > "$ALLOWED_FILE"
+  if ! bash "$0" "$ALLOWED_FILE" > /dev/null; then
+    echo "❌ SELF-TEST FAILED: allowlisted repository reference was falsely flagged. Scanner is over-detecting."
+    exit 1
+  fi
+  echo "--- true negative OK: allowlisted internal-term reference passed ---"
+
+  # 故意破壊テスト: パターン定義を空に差し替えると canary が検知されなくなる
+  # （=検知が本当にパターン定義に依存している）ことを確認する。ここで検知が
+  # 発生する場合、真陽性テストがパターン以外の要因で通っており、canary 機構
+  # 自体が壊れを検知できない状態にある。
+  printf 'internal term canary: %s\n' "$TERM_JA" > "$TERM_FILE"
+  if ! PII_PATTERNS_FILE="$EMPTY_PATTERNS" PII_BLOCKLIST_FILE="$EMPTY_PATTERNS" bash "$0" "$TERM_FILE" > /dev/null; then
+    echo "❌ SELF-TEST FAILED: detection fired even with patterns disabled. Breakage test cannot validate the canary."
+    exit 1
+  fi
+  echo "--- breakage-detection OK: canary goes undetected when patterns are disabled, so a broken scanner would be caught ---"
+
+  echo "✅ SELF-TEST PASSED: true positive + true negative + breakage detection all as expected."
   exit 0
 fi
 
