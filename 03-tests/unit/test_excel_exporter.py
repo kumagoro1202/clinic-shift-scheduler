@@ -16,7 +16,6 @@ from openpyxl import load_workbook
 
 from exporters.excel_exporter import build_grid, resolve_symbol, write_excel
 from scheduler import calendar, config_loader
-from scheduler.config_loader import WeeklyHoursCheck
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SAMPLE_CONFIG_PATH = REPO_ROOT / "config" / "samples" / "sample_clinic.yaml"
@@ -301,7 +300,9 @@ _SC003_SCHEDULE = {
 }
 
 
-def test_write_excel_sc003_warning_shaded_when_enabled_and_exceeded(config, calendar_days_all, monthly):
+def test_write_excel_sc003_warning_shaded_when_enabled_and_exceeded(
+    config, calendar_days_all, monthly
+):
     over_limit_config = dataclasses.replace(
         config,
         weekly_hours_check=config_loader.WeeklyHoursCheck(enabled=True, limit_hours=20),
@@ -330,7 +331,7 @@ def test_write_excel_sc003_warning_shaded_when_enabled_and_exceeded(config, cale
             c for c in range(2, ws.max_column + 1) if ws.cell(row=date_row, column=c).value == day
         )
         fill = ws.cell(row=staff_row, column=col).fill
-        assert fill.start_color.rgb == "00FFC7CE", f"2026-08-{day:02d} should be shaded as SC-003 warning"
+        assert fill.start_color.rgb == "00FFC7CE", f"2026-08-{day:02d} should be shaded"
 
     # 超過週に属さない別スタッフの行は警告色にならない
     other_row = next(
@@ -344,7 +345,9 @@ def test_write_excel_sc003_warning_shaded_when_enabled_and_exceeded(config, cale
     assert ws.cell(row=other_row, column=col_for_aug3).fill.start_color.rgb != "00FFC7CE"
 
 
-def test_write_excel_sc003_no_warning_when_disabled_even_if_exceeded(config, calendar_days_all, monthly):
+def test_write_excel_sc003_no_warning_when_disabled_even_if_exceeded(
+    config, calendar_days_all, monthly
+):
     # `config` fixture は weekly_hours_check.enabled=False（サンプル設定の初期値）。
     # 29時間勤務(スタッフAの限度超過と同等のデータ)でも無効時は従来通り無変化。
     buffer = io.BytesIO()
