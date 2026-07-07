@@ -75,7 +75,12 @@ if [ "$1" = "--self-test" ]; then
   TERM_ROMAJI=$(printf '%s%s' 'gun' 'shi')     # 組織ロール名（ローマ字・単語境界確認）
   TERM_CMD=$(printf '%s%s' 'cmd' '_123')       # 内部タスクID
   TERM_AGENT=$(printf '%s%s' 'ashi' 'garu5')   # 内部エージェントID（ロール名+号数字）
-  for term in "$TERM_JA" "$TERM_ROMAJI" "$TERM_CMD" "$TERM_AGENT"; do
+  TERM_CAP=$(printf '%s%s' 'Sho' 'gun')        # 大文字始まりローマ字（R1: case-insensitive 検証）
+  TERM_UPPER=$(printf '%s%s' 'KA' 'RO')        # 全大文字ローマ字（R1: case-insensitive 検証）
+  TERM_NUM1=$(printf '%s%s' 'ka' 'ro5')        # 他ロール号数字（R2: 拡張IDパターン検証）
+  TERM_NUM2=$(printf '%s%s' 'gun' 'shi2')      # 他ロール号数字（R2: 拡張IDパターン検証）
+  for term in "$TERM_JA" "$TERM_ROMAJI" "$TERM_CMD" "$TERM_AGENT" \
+              "$TERM_CAP" "$TERM_UPPER" "$TERM_NUM1" "$TERM_NUM2"; do
     printf 'internal term canary: %s\n' "$term" > "$TERM_FILE"
     if bash "$0" "$TERM_FILE" > /dev/null; then
       echo "❌ SELF-TEST FAILED: an internal-term canary was NOT detected. Scanner is broken."
