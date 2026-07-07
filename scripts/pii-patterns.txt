@@ -23,8 +23,11 @@
 # 戦国用語（日本語・組織ロール名）。日本語は英単語誤検出の心配がないため文字直指定。
 #   「殿」は敬称「〜殿」で誤検出しうるが公開コードでは基本不要のため検知し、正当例外は allowlist で除外する。
 将軍|家老|足軽|軍師|殿
-# 戦国用語ローマ字（単語境界必須。過去に gunshi が statistics の一部、rei が英単語内で
-#   誤検出された教訓を踏まえ、ローマ字は必ず \b で囲む）
-\b(shogun|karo|ashigaru|gunshi)\b
-# 内部タスクID（cmd_123・subtask_097d・ashigaru5 等）
-\b(cmd_[0-9]+|subtask_[0-9a-z]+|ashigaru[0-9]+)\b
+# 戦国用語ローマ字（case-insensitive・単語境界必須。過去に gunshi が statistics の一部、rei が英単語内で
+#   誤検出された教訓を踏まえローマ字は必ず \b で囲む。(?i) で Shogun/SHOGUN 等の大文字始まり・全大文字も
+#   捕捉し、手動走査スキル(-i 必須)と検知能力を一致させる。(?i) はこの行と内部ID行のみに局所適用し、
+#   既存PIIパターン（メール等）の誤検知挙動を変えないため grep 全体の -i 化はしない）
+(?i)\b(shogun|karo|ashigaru|gunshi)\b
+# 内部ID（cmd_123・CMD_123・subtask_097d・各ロール号数字 shogun1/karo5/gunshi2/ashigaru5 等。
+#   (?i) で大小文字問わず。号数字は ashigaru 以外のロールにも拡張）
+(?i)\b(cmd_[0-9]+|subtask_[0-9a-z]+|(shogun|karo|gunshi|ashigaru)[0-9]+)\b
