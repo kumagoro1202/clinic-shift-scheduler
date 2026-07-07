@@ -6,6 +6,7 @@ CSV形式で出力する（P6-9）。
 使用例:
     python cli.py generate \\
         --config config/samples/sample_clinic.yaml \\
+        --staff config/samples/sample_staff.yaml \\
         --schedule config/samples/sample_schedule_202608.yaml \\
         --output shift_202608.csv
 """
@@ -35,6 +36,17 @@ def build_parser() -> argparse.ArgumentParser:
 
     generate = subparsers.add_parser("generate", help="シフトを生成しCSV出力する")
     generate.add_argument("--config", required=True, help="診療所設定ファイル（YAML）")
+    generate.add_argument(
+        "--staff",
+        required=False,
+        default=None,
+        help=(
+            "スタッフマスタファイル（staff.yaml, schema_version: 2）。"
+            "指定した場合、スタッフ定義はこちらを単一ソースとして使用し、"
+            "--config 側の staff: セクションは無視する（P7-2 UI 編集との整合）。"
+            "省略時は --config の staff: セクションを使用する（後方互換）。"
+        ),
+    )
     generate.add_argument("--schedule", required=True, help="月次入力ファイル（YAML）")
     generate.add_argument("--output", required=True, help="CSV出力先パス")
     generate.add_argument(
@@ -47,10 +59,14 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def run_generate(
-    config_path: str, schedule_path: str, output_path: str, time_limit_seconds: float
+    config_path: str,
+    schedule_path: str,
+    output_path: str,
+    time_limit_seconds: float,
+    staff_path: str | None = None,
 ) -> int:
     """1ヶ月分のシフトを生成しCSV出力する。生成不可の場合は非ゼロを返す。"""
-    config = config_loader.load_config(config_path)
+    config = config_loader.load_config(config_path, staff_path=staff_path)
     monthly = calendar.load_monthly_schedule(schedule_path, config)
     calendar_days = calendar.expand_month(config, monthly)
 
@@ -77,7 +93,9 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     if args.command == "generate":
-        return run_generate(args.config, args.schedule, args.output, args.time_limit)
+        return run_generate(
+            args.config, args.schedule, args.output, args.time_limit, staff_path=args.staff
+        )
     parser.print_help()
     return 1
 

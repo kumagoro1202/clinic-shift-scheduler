@@ -22,6 +22,9 @@ import cli
 SAMPLE_CONFIG = (
     Path(__file__).resolve().parents[2] / "config" / "samples" / "sample_clinic.yaml"
 )
+SAMPLE_STAFF = (
+    Path(__file__).resolve().parents[2] / "config" / "samples" / "sample_staff.yaml"
+)
 SAMPLE_SCHEDULE = (
     Path(__file__).resolve().parents[2]
     / "config"
@@ -101,7 +104,11 @@ def infeasible_schedule_path(tmp_path: Path) -> Path:
 def test_run_generate_writes_csv_and_returns_zero(tmp_path: Path):
     output_path = tmp_path / "shift_202608.csv"
     exit_code = cli.run_generate(
-        str(SAMPLE_CONFIG), str(SAMPLE_SCHEDULE), str(output_path), cli.DEFAULT_TIME_LIMIT_SECONDS
+        str(SAMPLE_CONFIG),
+        str(SAMPLE_SCHEDULE),
+        str(output_path),
+        cli.DEFAULT_TIME_LIMIT_SECONDS,
+        staff_path=str(SAMPLE_STAFF),
     )
     assert exit_code == 0
     assert output_path.is_file()
@@ -125,6 +132,8 @@ def test_main_generate_subcommand_end_to_end(tmp_path: Path, capsys):
             "generate",
             "--config",
             str(SAMPLE_CONFIG),
+            "--staff",
+            str(SAMPLE_STAFF),
             "--schedule",
             str(SAMPLE_SCHEDULE),
             "--output",
@@ -150,6 +159,7 @@ def test_run_generate_completes_within_60_seconds(tmp_path: Path):
         str(SAMPLE_SCHEDULE),
         str(output_path),
         cli.DEFAULT_TIME_LIMIT_SECONDS,
+        staff_path=str(SAMPLE_STAFF),
     )
     elapsed = time.monotonic() - started
     assert exit_code == 0

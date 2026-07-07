@@ -106,6 +106,13 @@ areas:
 
 # スタッフ定義（全員架空のテストデータ）
 # skills: リハ室 / 受付午前 / 受付午後 / 総合対応力（0〜100。0 = 配置不可）
+#
+# 【スタッフデータソースについて】P7-2 管理者 UI（スタッフ管理画面）からの
+# 編集は config/samples/sample_staff.yaml（schema_version: 2）に対して行われる。
+# config_loader.load_config() に staff_path を指定した場合はそちらを単一
+# ソースとして使用し、本セクションは無視される（P7-4 シフト生成・CLI の
+# 実運用経路はこちら）。本セクションは staff_path 省略時（週次モデル
+# build_model・engine.run 等の後方互換経路）でのみ参照される。
 staff:
   - name: "スタッフA"
     employment: full_time
