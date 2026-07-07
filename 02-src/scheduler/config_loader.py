@@ -120,6 +120,35 @@ class Vacation:
     kind: str  # full / am / pm
 
 
+# 勤務表記号（Q-07 仮デフォルト。`external/output-design.md` 5 章）
+DEFAULT_PATTERN_SYMBOLS = {"early": "早", "late": "遅", "half": "半"}
+DEFAULT_VACATION_FULL_SYMBOL = "休"
+DEFAULT_VACATION_AM_SYMBOL = "前"
+DEFAULT_VACATION_PM_SYMBOL = "後"
+DEFAULT_VACATION_PAID_SYMBOL = "有"
+DEFAULT_NONE_SYMBOL = "／"
+
+
+@dataclass(frozen=True)
+class OutputSymbols:
+    """勤務表（Excel 出力）の記号マッピング。Q-07 未確定のため設定で上書き可能
+    （`output.symbols`）。`vacation_paid` は `paid: true` の休暇に優先適用する
+    （`kind` 別の記号より優先。`config/schema_reference.md` 参照）。
+    """
+
+    patterns: dict[str, str]  # 勤務パターン名 -> 表示記号
+    vacation_full: str
+    vacation_am: str
+    vacation_pm: str
+    vacation_paid: str
+    none: str  # 休診日・配置なしの記号
+
+    def vacation_symbol(self, kind: str, paid: bool) -> str:
+        if paid:
+            return self.vacation_paid
+        return {"full": self.vacation_full, "am": self.vacation_am, "pm": self.vacation_pm}[kind]
+
+
 @dataclass(frozen=True)
 class Staff:
     name: str
@@ -152,6 +181,7 @@ class Config:
     shift_patterns: tuple[ShiftPattern, ...]
     areas: tuple[Area, ...]
     staff: tuple[Staff, ...]
+    output_symbols: OutputSymbols
 
     def patterns_for(self, weekday: str) -> tuple[ShiftPattern, ...]:
         day_type = self.day_types[weekday]
@@ -315,6 +345,22 @@ def _load_staff_from_master(path: str | Path) -> tuple[Staff, ...]:
     return members
 
 
+def _load_output_symbols(raw: dict) -> OutputSymbols:
+    symbols_raw = (raw.get("output", {}) or {}).get("symbols", {}) or {}
+    patterns = {
+        **DEFAULT_PATTERN_SYMBOLS,
+        **{str(k): str(v) for k, v in (symbols_raw.get("patterns") or {}).items()},
+    }
+    return OutputSymbols(
+        patterns=patterns,
+        vacation_full=str(symbols_raw.get("vacation_full", DEFAULT_VACATION_FULL_SYMBOL)),
+        vacation_am=str(symbols_raw.get("vacation_am", DEFAULT_VACATION_AM_SYMBOL)),
+        vacation_pm=str(symbols_raw.get("vacation_pm", DEFAULT_VACATION_PM_SYMBOL)),
+        vacation_paid=str(symbols_raw.get("vacation_paid", DEFAULT_VACATION_PAID_SYMBOL)),
+        none=str(symbols_raw.get("none", DEFAULT_NONE_SYMBOL)),
+    )
+
+
 def _load_clinic_hours(raw: dict) -> dict[str, dict[str, TimeRange | None]]:
     hours: dict[str, dict[str, TimeRange | None]] = {}
     for weekday in WEEKDAYS:
@@ -413,6 +459,7 @@ def load_config(path: str | Path, staff_path: str | Path | None = None) -> Confi
         shift_patterns=patterns,
         areas=areas,
         staff=staff,
+        output_symbols=_load_output_symbols(raw),
     )
     _validate_cross_references(config)
     return config

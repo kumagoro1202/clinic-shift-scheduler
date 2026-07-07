@@ -62,6 +62,29 @@ def test_expand_month_excludes_closed_and_applies_overrides(calendar_days):
     assert len(calendar_days) == 24
 
 
+def test_expand_month_all_includes_closed_days(config, monthly):
+    """P7-6: `expand_month_all` は休診日も含めて全日を返すこと（Excel出力の
+    休診日網掛け表示に使用する。`external/output-design.md` 4章）。"""
+    all_days = calendar.expand_month_all(config, monthly)
+    dates = {day.date for day in all_days}
+
+    assert "2026-08-02" in dates  # 日曜（曜日由来の休診日）
+    assert "2026-08-11" in dates  # 祝日（カレンダー例外）
+    by_date = {day.date: day for day in all_days}
+    assert by_date["2026-08-02"].day_type == "closed"
+    assert by_date["2026-08-11"].day_type == "closed"
+    assert by_date["2026-08-11"].reason == "祝日"
+
+    # 31日分すべてを含む
+    assert len(all_days) == 31
+
+
+def test_expand_month_is_subset_of_expand_month_all(config, monthly, calendar_days):
+    all_days = calendar.expand_month_all(config, monthly)
+    assert set(d.date for d in calendar_days) <= set(d.date for d in all_days)
+    assert all(d.day_type != "closed" for d in calendar_days)
+
+
 def test_expand_month_day_type_from_weekday_template(calendar_days):
     """カレンダー例外がない日は、曜日テンプレートの day_type が適用されること。"""
     by_date = {day.date: day for day in calendar_days}

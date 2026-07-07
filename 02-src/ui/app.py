@@ -3,7 +3,7 @@
 ARCHITECTURE.md 5 章のモジュール分割方針に基づくエントリポイント。
 個別画面は `ui/pages/` 配下のスクリプトとして実装し、`st.navigation` +
 `st.Page`（ファイルパス方式）によるマルチページ構成でここから結線する
-（軍師申し送り: st.Page 方式を採用。ファイルパス方式は AppTest.switch_page
+（設計メモ: st.Page 方式を採用。ファイルパス方式は AppTest.switch_page
 による画面単位のテスタビリティを公式にサポートしており、AppTest 側が
 callable 方式のページ切替に未対応な現状（Streamlit 1.59 時点）と整合する）。
 """
@@ -30,6 +30,7 @@ def main() -> None:
         st.Page("pages/vacation_input.py", title="休暇入力"),
         st.Page("pages/shift_generation.py", title="シフト生成"),
         st.Page("pages/shift_editing.py", title="シフト編集"),
+        st.Page("pages/shift_export.py", title="Excel 出力"),
     ]
     st.navigation(pages).run()
 

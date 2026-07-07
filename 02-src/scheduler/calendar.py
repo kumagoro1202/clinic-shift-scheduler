@@ -150,10 +150,11 @@ def load_monthly_schedule(path: str | Path, config: Config) -> MonthlySchedule:
     )
 
 
-def expand_month(config: Config, monthly: MonthlySchedule) -> tuple[CalendarDay, ...]:
+def expand_month_all(config: Config, monthly: MonthlySchedule) -> tuple[CalendarDay, ...]:
     """対象月の日付列を、曜日テンプレート + カレンダー例外で展開する。
 
-    `closed` の日（曜日由来・上書き後いずれも）は生成対象から除外する。
+    `expand_month` と異なり `closed` の日も含む（Excel 出力等、休診日も
+    グリッドに表示したい用途向け。`external/output-design.md` 4 章）。
     """
     overrides = {o.date: o for o in monthly.calendar_overrides}
     days = []
@@ -165,9 +166,15 @@ def expand_month(config: Config, monthly: MonthlySchedule) -> tuple[CalendarDay,
         if override is not None:
             day_type = override.day_type
             reason = override.reason
-        if day_type == "closed":
-            continue
         days.append(
             CalendarDay(date=date_str, weekday=weekday, day_type=day_type, reason=reason)
         )
     return tuple(days)
+
+
+def expand_month(config: Config, monthly: MonthlySchedule) -> tuple[CalendarDay, ...]:
+    """対象月の日付列を、曜日テンプレート + カレンダー例外で展開する。
+
+    `closed` の日（曜日由来・上書き後いずれも）は生成対象から除外する。
+    """
+    return tuple(day for day in expand_month_all(config, monthly) if day.day_type != "closed")
