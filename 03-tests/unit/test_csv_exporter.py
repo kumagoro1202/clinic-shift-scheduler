@@ -7,7 +7,7 @@ UTF-8 BOM付き・CRLF改行）を検証する。スケジュール結果は本�
 
 from pathlib import Path
 
-from exporters.csv_exporter import CSV_HEADER, build_rows, write_csv
+from exporters.csv_exporter import CSV_HEADER, build_rows, rows_to_schedule, write_csv
 from scheduler.calendar import CalendarDay
 
 _CALENDAR_DAYS = (
@@ -60,6 +60,39 @@ def test_build_rows_includes_weekday_from_calendar_days():
 def test_build_rows_skips_days_with_no_assignments():
     rows = build_rows(_SCHEDULE, _CALENDAR_DAYS)
     assert all(r["date"] != "2026-08-04" for r in rows)
+
+
+def test_rows_to_schedule_is_inverse_of_build_rows():
+    """P7-5: build_rows で得た行を rows_to_schedule へ渡すと、
+    元のスケジュール（休日以外）へ復元できること。"""
+    rows = build_rows(_SCHEDULE, _CALENDAR_DAYS)
+    rebuilt = rows_to_schedule(rows)
+    assert rebuilt == {
+        "2026-08-03": {
+            "スタッフA": _SCHEDULE["2026-08-03"]["スタッフA"],
+            "スタッフB": _SCHEDULE["2026-08-03"]["スタッフB"],
+        }
+    }
+
+
+def test_rows_to_schedule_skips_incomplete_rows():
+    """編集中の空行（date/staff が未入力）は読み飛ばすこと。"""
+    rows = [
+        {"date": "", "staff": "", "pattern": "", "area": "", "start": "", "end": ""},
+        {
+            "date": "2026-08-03",
+            "staff": "スタッフA",
+            "pattern": "early",
+            "area": "reception",
+            "start": "08:30",
+            "end": "12:30",
+        },
+    ]
+    rebuilt = rows_to_schedule(rows)
+    assert list(rebuilt.keys()) == ["2026-08-03"]
+    assert rebuilt["2026-08-03"]["スタッフA"]["work"] == [
+        {"area": "reception", "start": "08:30", "end": "12:30"}
+    ]
 
 
 def test_write_csv_output_format(tmp_path: Path):

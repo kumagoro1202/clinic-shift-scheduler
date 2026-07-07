@@ -19,11 +19,7 @@ def render_home() -> None:
     """トップ画面（ホーム）を描画する。"""
     st.title(APP_TITLE)
     st.caption("管理者向けシフト作成・編集システム")
-    st.info(
-        "左のナビゲーションから各画面を選択してください。"
-        "シフト手動編集などの画面は、"
-        "今後のフェーズ（P7-5 以降）で追加されます。"
-    )
+    st.info("左のナビゲーションから各画面を選択してください。")
 
 
 def main() -> None:
@@ -33,6 +29,7 @@ def main() -> None:
         st.Page("pages/staff_management.py", title="スタッフ管理"),
         st.Page("pages/vacation_input.py", title="休暇入力"),
         st.Page("pages/shift_generation.py", title="シフト生成"),
+        st.Page("pages/shift_editing.py", title="シフト編集"),
     ]
     st.navigation(pages).run()
 

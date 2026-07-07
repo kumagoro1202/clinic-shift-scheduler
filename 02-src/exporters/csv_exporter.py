@@ -46,6 +46,35 @@ def build_rows(schedule: dict, calendar_days: tuple[CalendarDay, ...]) -> list[d
     return rows
 
 
+def rows_to_schedule(rows: list[dict]) -> dict:
+    """`build_rows` の逆変換。編集後の行（辞書のリスト）からスケジュール結果
+    （`{日付: {スタッフ名: {"pattern", "work", "break"}}}`）を再構築する（P7-5）。
+
+    `area` = "break" の行は休憩として扱う。必須項目（staff/area/start/end）が
+    欠けている行（編集途中の空行等）は読み飛ばす。
+    """
+    schedule: dict[str, dict[str, dict]] = {}
+    for row in rows:
+        date_str = row.get("date")
+        staff_name = row.get("staff")
+        if not date_str or not staff_name:
+            continue
+        entry = schedule.setdefault(date_str, {}).setdefault(
+            staff_name, {"pattern": row.get("pattern"), "work": [], "break": None}
+        )
+        if row.get("pattern"):
+            entry["pattern"] = row["pattern"]
+
+        area, start, end = row.get("area"), row.get("start"), row.get("end")
+        if not area or not start or not end:
+            continue
+        if area == "break":
+            entry["break"] = {"start": start, "end": end}
+        else:
+            entry["work"].append({"area": area, "start": start, "end": end})
+    return schedule
+
+
 def write_csv(
     schedule: dict, calendar_days: tuple[CalendarDay, ...], output_path: str | Path
 ) -> None:
