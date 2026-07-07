@@ -29,6 +29,9 @@ jobs:
           cache: 'pip'
       - name: Install dev dependencies
         run: pip install -r requirements-dev.txt
+      # E2E（P7-8）: Playwright ブラウザバイナリの取得
+      - name: Install Playwright browsers
+        run: playwright install --with-deps chromium
       # カバレッジゲート 80%（対象: 02-src/。pyproject.toml [tool.coverage] 参照）
       - name: Run tests with coverage gate
         run: pytest --cov --cov-fail-under=80

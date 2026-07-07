@@ -97,6 +97,9 @@ clinic-shift-scheduler/
 
 起動後、`http://localhost:8501` にブラウザでアクセスする。
 
+月次のシフト作成業務の操作手順は
+[利用者マニュアル](01-docs/manual/USER_MANUAL.md) を参照する。
+
 ## 個人情報保護（PIIスキャン）
 
 pre-commit フックと GitHub Actions CI（`pii-check.yml`）が `scripts/pii-check.sh` を
