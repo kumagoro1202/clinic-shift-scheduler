@@ -76,7 +76,9 @@ clinic-shift-scheduler/
 │   ├── pii-check.sh            # 個人情報チェックスクリプト
 │   ├── pii-patterns.txt        # 個人情報検出パターン定義
 │   ├── names-blocklist.txt     # 日本の姓ブロックリスト
-│   └── allowlist.txt           # False Positive除外リスト
+│   ├── allowlist.txt           # False Positive除外リスト
+│   ├── run_app.bat             # 管理者UI起動ランチャー（Windows）
+│   └── run_app.sh              # 管理者UI起動ランチャー（Linux/WSL 開発用）
 │
 ├── .pre-commit-config.yaml      # Pre-commitフック設定
 ├── .markdownlint.json           # Markdownlintルール設定
@@ -84,6 +86,16 @@ clinic-shift-scheduler/
 ├── .gitignore
 └── CLAUDE.md                    # プロジェクト固有ルール
 ```
+
+## 管理者UIの起動
+
+管理者UI（Streamlit）は `scripts/` の起動スクリプトから起動する。
+初回実行時は仮想環境の作成・依存パッケージのインストールを自動で行う。
+
+- **Windows 10/11（本番環境）**: `scripts\run_app.bat` をダブルクリック
+- **Linux/WSL（開発環境）**: `bash scripts/run_app.sh`
+
+起動後、`http://localhost:8501` にブラウザでアクセスする。
 
 ## 個人情報保護（PIIスキャン）
 
