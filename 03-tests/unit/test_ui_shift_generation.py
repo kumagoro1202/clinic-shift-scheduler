@@ -1,9 +1,13 @@
-"""ui/pages/shift_generation.py（P7-4）の AppTest による表示・生成動作確認。
+"""ui/pages/shift_generation.py（P7-4・P7-7）の AppTest による表示・生成動作確認。
 
 ARCHITECTURE.md 4 章のテスト戦略（UI 層は Streamlit AppTest でヘッドレス検証）に
 基づく。データソースは環境変数 CLINIC_CONFIG_PATH / CLINIC_SCHEDULE_PATH で
 テスト用の一時ファイルへ差し替える（vacation_input.py と同様の理由で
 ファイルパス方式の st.Page は Python オブジェクトの直接差し替えができない）。
+
+P7-7 の SC-003（週40時間超過警告）は、生成エンジンを実際に走らせず
+（CP-SAT 求解は重い）、P7-5 のテストと同様に `shift_generation_result` を
+session_state へ直接セットして描画のみを検証する。
 """
 
 from __future__ import annotations
@@ -53,6 +57,51 @@ def infeasible_env(tmp_path, monkeypatch):
     schedule_target.write_text(INFEASIBLE_SCHEDULE_YAML, encoding="utf-8")
     monkeypatch.setenv("CLINIC_SCHEDULE_PATH", str(schedule_target))
     return schedule_target
+
+
+@pytest.fixture
+def weekly_hours_enabled_env(tmp_path, monkeypatch):
+    # sample_clinic.yaml の weekly_hours_check を有効化・上限5時間に縮小した
+    # 一時設定（SC-003 の警告表示検証用。5時間は容易に超過させられる値）。
+    config_text = SAMPLE_CONFIG_PATH.read_text(encoding="utf-8").replace(
+        "enabled: false # 週40時間チェック（初期OFF）\n    limit_hours: 40",
+        "enabled: true # SC-003検証用に一時的に有効化\n    limit_hours: 5",
+    )
+    assert "enabled: true" in config_text, "sample_clinic.yaml のフォーマットが変更された"
+    config_target = tmp_path / "clinic.yaml"
+    config_target.write_text(config_text, encoding="utf-8")
+    monkeypatch.setenv("CLINIC_CONFIG_PATH", str(config_target))
+
+    schedule_target = tmp_path / "schedule.yaml"
+    shutil.copy(SAMPLE_SCHEDULE_PATH, schedule_target)
+    monkeypatch.setenv("CLINIC_SCHEDULE_PATH", str(schedule_target))
+    return schedule_target
+
+
+# スタッフA・reception 終日勤務（08:30-12:30, 13:30-17:30 = 8h）。上限5hを超過。
+_OVER_LIMIT_SCHEDULE = {
+    "2026-08-03": {
+        "スタッフA": {
+            "pattern": "early",
+            "work": [
+                {"area": "reception", "start": "08:30", "end": "12:30"},
+                {"area": "reception", "start": "13:30", "end": "17:30"},
+            ],
+            "break": {"start": "12:30", "end": "13:30"},
+        },
+    },
+}
+
+# スタッフA・reception 午前のみ（08:30-12:30 = 4h）。上限5h以内。
+_WITHIN_LIMIT_SCHEDULE = {
+    "2026-08-03": {
+        "スタッフA": {
+            "pattern": "early",
+            "work": [{"area": "reception", "start": "08:30", "end": "12:30"}],
+            "break": None,
+        },
+    },
+}
 
 
 def test_shift_generation_shows_title_and_controls(feasible_env):
@@ -146,3 +195,44 @@ def test_shift_generation_shows_error_for_missing_schedule_file(tmp_path, monkey
     assert not at.exception
     assert at.error
     assert "読込に失敗" in at.error[0].value
+
+
+def test_weekly_hours_warning_shown_when_exceeded(weekly_hours_enabled_env):
+    at = AppTest.from_file(str(PAGE_PATH))
+    at.session_state["shift_generation_result"] = {
+        "status": "OPTIMAL",
+        "schedule": _OVER_LIMIT_SCHEDULE,
+    }
+    at.run(timeout=15)
+
+    assert not at.exception
+    assert "週40時間超過警告（SC-003）" in [s.value for s in at.subheader]
+    assert at.warning
+    assert any("週40時間超過があります" in w.value for w in at.warning)
+    warning_rows = at.dataframe[-1].value
+    assert "スタッフA" in set(warning_rows["スタッフ"])
+
+
+def test_weekly_hours_no_warning_when_within_limit(weekly_hours_enabled_env):
+    at = AppTest.from_file(str(PAGE_PATH))
+    at.session_state["shift_generation_result"] = {
+        "status": "OPTIMAL",
+        "schedule": _WITHIN_LIMIT_SCHEDULE,
+    }
+    at.run(timeout=15)
+
+    assert not at.exception
+    assert "週40時間超過警告（SC-003）" in [s.value for s in at.subheader]
+    assert any("週40時間超過はありません" in s.value for s in at.success)
+
+
+def test_weekly_hours_section_hidden_when_disabled(feasible_env):
+    at = AppTest.from_file(str(PAGE_PATH))
+    at.session_state["shift_generation_result"] = {
+        "status": "OPTIMAL",
+        "schedule": _OVER_LIMIT_SCHEDULE,
+    }
+    at.run(timeout=15)
+
+    assert not at.exception
+    assert "週40時間超過警告（SC-003）" not in [s.value for s in at.subheader]
