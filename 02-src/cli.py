@@ -19,7 +19,11 @@ import time
 from exporters.csv_exporter import write_csv
 from scheduler import calendar, config_loader, engine
 
-DEFAULT_TIME_LIMIT_SECONDS = 60.0
+# ARCHITECTURE.md 7章 P6-9の性能要件（1ヶ月分の生成が60秒以内に完了すること）は
+# CLI全体の所要時間（設定読込・求解・CSV書き出しの合計）を指す。求解自体に60秒
+# 丸ごと使うと、求解タイムアウト超過分やCSV書き出し等のオーバーヘッドで合計が
+# 60秒を超えうるため、既定値には余裕を持たせる。
+DEFAULT_TIME_LIMIT_SECONDS = 55.0
 
 
 def build_parser() -> argparse.ArgumentParser:

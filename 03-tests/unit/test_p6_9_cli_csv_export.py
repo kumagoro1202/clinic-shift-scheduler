@@ -7,6 +7,9 @@ config/samples/sample_schedule_202608.yaml）と、本テスト専用の最小�
 ■ 性能要件（MANDATORY・ARCHITECTURE.md 7章 P6-9）
 1ヶ月分のシフト生成が60秒以内に完了することを検証する
 （test_run_generate_completes_within_60_seconds）。
+求解自体の時間制限（`cli.DEFAULT_TIME_LIMIT_SECONDS`）には、CSV書き出し等の
+オーバーヘッドや求解タイムアウトの丸め誤差を吸収する余裕を持たせてあるため、
+CLI全体の所要時間（壁時計時間）は60秒の要件と別に検証する。
 """
 
 import time
@@ -26,7 +29,7 @@ SAMPLE_SCHEDULE = (
     / "sample_schedule_202608.yaml"
 )
 
-PERFORMANCE_LIMIT_SECONDS = 60.0
+WALL_CLOCK_REQUIREMENT_SECONDS = 60.0
 
 # 敵対的検証用: 1名構成・平日1日のみ営業だが必要人数2（配置可能な人数を
 # 上回る）ため、必ずINFEASIBLEになる最小構成。
@@ -98,7 +101,7 @@ def infeasible_schedule_path(tmp_path: Path) -> Path:
 def test_run_generate_writes_csv_and_returns_zero(tmp_path: Path):
     output_path = tmp_path / "shift_202608.csv"
     exit_code = cli.run_generate(
-        str(SAMPLE_CONFIG), str(SAMPLE_SCHEDULE), str(output_path), 60.0
+        str(SAMPLE_CONFIG), str(SAMPLE_SCHEDULE), str(output_path), cli.DEFAULT_TIME_LIMIT_SECONDS
     )
     assert exit_code == 0
     assert output_path.is_file()
@@ -126,8 +129,6 @@ def test_main_generate_subcommand_end_to_end(tmp_path: Path, capsys):
             str(SAMPLE_SCHEDULE),
             "--output",
             str(output_path),
-            "--time-limit",
-            "60",
         ]
     )
     assert exit_code == 0
@@ -141,18 +142,19 @@ def test_main_generate_subcommand_end_to_end(tmp_path: Path, capsys):
 
 
 def test_run_generate_completes_within_60_seconds(tmp_path: Path):
+    """CLI既定の求解時間制限（余裕込み）で、CLI全体の所要時間が60秒以内であること。"""
     output_path = tmp_path / "shift_perf.csv"
     started = time.monotonic()
     exit_code = cli.run_generate(
         str(SAMPLE_CONFIG),
         str(SAMPLE_SCHEDULE),
         str(output_path),
-        PERFORMANCE_LIMIT_SECONDS,
+        cli.DEFAULT_TIME_LIMIT_SECONDS,
     )
     elapsed = time.monotonic() - started
     assert exit_code == 0
-    assert elapsed <= PERFORMANCE_LIMIT_SECONDS, (
-        f"1ヶ月分のシフト生成が性能要件({PERFORMANCE_LIMIT_SECONDS}秒)を"
+    assert elapsed <= WALL_CLOCK_REQUIREMENT_SECONDS, (
+        f"1ヶ月分のシフト生成が性能要件({WALL_CLOCK_REQUIREMENT_SECONDS}秒)を"
         f"超過しました: 実測 {elapsed:.1f}秒"
     )
 
