@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import io
 from pathlib import Path
 
@@ -15,6 +16,7 @@ from openpyxl import load_workbook
 
 from exporters.excel_exporter import build_grid, resolve_symbol, write_excel
 from scheduler import calendar, config_loader
+from scheduler.config_loader import WeeklyHoursCheck
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SAMPLE_CONFIG_PATH = REPO_ROOT / "config" / "samples" / "sample_clinic.yaml"
@@ -246,8 +248,6 @@ def test_custom_symbol_mapping_via_config(monthly):
         vacation_paid="P",
         none="-",
     )
-    import dataclasses
-
     custom_config = dataclasses.replace(custom_config, output_symbols=custom_symbols)
     calendar_days_all = calendar.expand_month_all(custom_config, monthly)
 
@@ -255,3 +255,120 @@ def test_custom_symbol_mapping_via_config(monthly):
     row_a = next(r for r in rows if r["staff"] == "スタッフA")
     assert row_a["symbols"]["2026-08-03"] == "E"
     assert row_a["symbols"]["2026-08-05"] == "P"  # 有給休暇
+
+
+# SC-003（週40時間チェック）警告注記のテスト用スケジュール。
+# スタッフAが同一ISO週（2026-08-03月〜08-06木）に29時間勤務する
+# （limit_hours を下回る値に設定すれば超過、上回る値では超過しない）。
+_SC003_SCHEDULE = {
+    "2026-08-03": {
+        "スタッフA": {
+            "pattern": "early",
+            "work": [
+                {"area": "reception", "start": "08:30", "end": "12:30"},
+                {"area": "reception", "start": "13:30", "end": "17:30"},
+            ],
+            "break": {"start": "12:30", "end": "13:30"},
+        },
+    },
+    "2026-08-04": {
+        "スタッフA": {
+            "pattern": "early",
+            "work": [
+                {"area": "reception", "start": "08:30", "end": "12:30"},
+                {"area": "reception", "start": "13:30", "end": "17:30"},
+            ],
+            "break": {"start": "12:30", "end": "13:30"},
+        },
+    },
+    "2026-08-05": {
+        "スタッフA": {
+            "pattern": "early",
+            "work": [
+                {"area": "reception", "start": "08:30", "end": "12:30"},
+                {"area": "reception", "start": "13:30", "end": "17:30"},
+            ],
+            "break": {"start": "12:30", "end": "13:30"},
+        },
+    },
+    "2026-08-06": {
+        "スタッフA": {
+            "pattern": "half",
+            "work": [{"area": "reception", "start": "08:30", "end": "13:30"}],
+            "break": None,
+        },
+    },
+}
+
+
+def test_write_excel_sc003_warning_shaded_when_enabled_and_exceeded(config, calendar_days_all, monthly):
+    over_limit_config = dataclasses.replace(
+        config,
+        weekly_hours_check=config_loader.WeeklyHoursCheck(enabled=True, limit_hours=20),
+    )
+    buffer = io.BytesIO()
+    write_excel(
+        over_limit_config,
+        calendar_days_all,
+        monthly.vacations,
+        _SC003_SCHEDULE,
+        monthly.target_month,
+        buffer,
+    )
+    buffer.seek(0)
+    wb = load_workbook(buffer)
+    ws = wb["月間勤務表"]
+
+    date_row = 2
+    staff_row = next(
+        r
+        for r in range(4, ws.max_row + 1)
+        if ws.cell(row=r, column=1).value == "スタッフA"
+    )
+    for day in (3, 4, 5, 6):
+        col = next(
+            c for c in range(2, ws.max_column + 1) if ws.cell(row=date_row, column=c).value == day
+        )
+        fill = ws.cell(row=staff_row, column=col).fill
+        assert fill.start_color.rgb == "00FFC7CE", f"2026-08-{day:02d} should be shaded as SC-003 warning"
+
+    # 超過週に属さない別スタッフの行は警告色にならない
+    other_row = next(
+        r
+        for r in range(4, ws.max_row + 1)
+        if ws.cell(row=r, column=1).value == "スタッフB"
+    )
+    col_for_aug3 = next(
+        c for c in range(2, ws.max_column + 1) if ws.cell(row=date_row, column=c).value == 3
+    )
+    assert ws.cell(row=other_row, column=col_for_aug3).fill.start_color.rgb != "00FFC7CE"
+
+
+def test_write_excel_sc003_no_warning_when_disabled_even_if_exceeded(config, calendar_days_all, monthly):
+    # `config` fixture は weekly_hours_check.enabled=False（サンプル設定の初期値）。
+    # 29時間勤務(スタッフAの限度超過と同等のデータ)でも無効時は従来通り無変化。
+    buffer = io.BytesIO()
+    write_excel(
+        config,
+        calendar_days_all,
+        monthly.vacations,
+        _SC003_SCHEDULE,
+        monthly.target_month,
+        buffer,
+    )
+    buffer.seek(0)
+    wb = load_workbook(buffer)
+    ws = wb["月間勤務表"]
+
+    date_row = 2
+    staff_row = next(
+        r
+        for r in range(4, ws.max_row + 1)
+        if ws.cell(row=r, column=1).value == "スタッフA"
+    )
+    for day in (3, 4, 5, 6):
+        col = next(
+            c for c in range(2, ws.max_column + 1) if ws.cell(row=date_row, column=c).value == day
+        )
+        fill = ws.cell(row=staff_row, column=col).fill
+        assert fill.start_color.rgb != "00FFC7CE"

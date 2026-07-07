@@ -5,7 +5,8 @@
 収まることを必須条件とする。勤務記号は `Config.output_symbols`（Q-07 仮デフォルト。
 `output.symbols` で上書き可能）を使用する。出力対象のスケジュールは呼び出し側
 （UI 層）が渡したもの（P7-5 手動編集後の最新値であること）であり、本モジュールは
-生成・編集ロジックを持たない。
+生成・編集ロジックを持たない。SC-003 週40時間チェック（`external/output-design.md`
+6 章）が有効な場合、超過週に属するセルへ警告色を付ける（無効時は従来通り無変化）。
 """
 
 from __future__ import annotations
@@ -19,7 +20,8 @@ from openpyxl.worksheet.worksheet import Worksheet
 
 from exporters.csv_exporter import build_rows
 from scheduler.calendar import CalendarDay, DateVacation
-from scheduler.config_loader import Config
+from scheduler.config_loader import Config, parse_time
+from scheduler.result import _iso_week_key
 
 WEEKDAY_LABELS = {
     "mon": "月",
@@ -32,6 +34,7 @@ WEEKDAY_LABELS = {
 }
 
 _CLOSED_FILL = PatternFill(start_color="D9D9D9", end_color="D9D9D9", fill_type="solid")
+_SC003_WARNING_FILL = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
 _HEADER_FONT = Font(bold=True)
 _CENTER = Alignment(horizontal="center")
 
@@ -64,6 +67,44 @@ def resolve_symbol(
         return symbols.vacation_symbol(vacation.kind, vacation.paid)
 
     return symbols.none
+
+
+def _sc003_warning_cells(
+    config: Config,
+    calendar_days_all: tuple[CalendarDay, ...],
+    schedule: dict,
+) -> set[tuple[str, str]]:
+    """SC-003週40時間超過（`output-design.md` 6章）の対象セル（スタッフ, 日付）集合。
+
+    `config.weekly_hours_check` が無効な場合は空集合を返す（従来通り無変化）。
+    `result.validate_hard_constraints` と同じ週実働時間の集計基準を用い、
+    上限超過の週に属する全ての勤務日を対象とする。
+    """
+    if not config.weekly_hours_check.enabled:
+        return set()
+
+    limit_minutes = config.weekly_hours_check.limit_hours * 60
+    weekly_minutes: dict[tuple[str, str], int] = {}
+    dates_by_week: dict[tuple[str, str], list[str]] = {}
+    for day in calendar_days_all:
+        week_key = _iso_week_key(day.date)
+        for staff_name, entry in schedule.get(day.date, {}).items():
+            work_minutes = sum(
+                parse_time(seg["end"]) - parse_time(seg["start"])
+                for seg in entry.get("work") or []
+            )
+            if not work_minutes:
+                continue
+            key = (staff_name, week_key)
+            weekly_minutes[key] = weekly_minutes.get(key, 0) + work_minutes
+            dates_by_week.setdefault(key, []).append(day.date)
+
+    cells: set[tuple[str, str]] = set()
+    for key, minutes in weekly_minutes.items():
+        if minutes > limit_minutes:
+            staff_name = key[0]
+            cells.update((staff_name, date) for date in dates_by_week[key])
+    return cells
 
 
 def build_grid(
@@ -100,6 +141,7 @@ def _write_monthly_sheet(
     grid_rows: list[dict],
     orientation: str,
     paper_size: str,
+    warning_cells: set[tuple[str, str]],
 ) -> None:
     ws.title = "月間勤務表"
     ws.cell(row=1, column=1, value=f"勤務表 {target_month}").font = _HEADER_FONT
@@ -127,6 +169,8 @@ def _write_monthly_sheet(
             cell.alignment = _CENTER
             if day.day_type == "closed":
                 cell.fill = _CLOSED_FILL
+            elif (row["staff"], day.date) in warning_cells:
+                cell.fill = _SC003_WARNING_FILL
         ws.cell(row=r, column=total_col, value=row["workdays"]).alignment = _CENTER
 
     ws.column_dimensions["A"].width = 12
@@ -180,11 +224,18 @@ def write_excel(
         raise ValueError(f"paper_size は {tuple(_PAPER_SIZES)} のいずれかである必要があります")
 
     grid_rows = build_grid(config, calendar_days_all, vacations, schedule)
+    warning_cells = _sc003_warning_cells(config, calendar_days_all, schedule)
 
     wb = Workbook()
     monthly_sheet = wb.active
     _write_monthly_sheet(
-        monthly_sheet, target_month, calendar_days_all, grid_rows, orientation, paper_size
+        monthly_sheet,
+        target_month,
+        calendar_days_all,
+        grid_rows,
+        orientation,
+        paper_size,
+        warning_cells,
     )
 
     open_days = tuple(day for day in calendar_days_all if day.day_type != "closed")
