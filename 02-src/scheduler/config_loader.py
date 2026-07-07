@@ -11,6 +11,10 @@ from pathlib import Path
 
 import yaml
 
+from .staff_repository import SKILL_KEYS as _STAFF_MASTER_SKILL_KEYS
+from .staff_repository import StaffValidationError
+from .staff_repository import load_staff as _load_staff_master
+
 WEEKDAYS = ("mon", "tue", "wed", "thu", "fri", "sat", "sun")
 DAY_TYPES = ("full", "short", "half", "closed")
 VACATION_KINDS = ("full", "am", "pm")
@@ -283,6 +287,34 @@ def _load_staff(raw_list: list) -> tuple[Staff, ...]:
     return tuple(members)
 
 
+def _load_staff_from_master(path: str | Path) -> tuple[Staff, ...]:
+    """staff.yaml（staff_repository, schema_version: 2）をスタッフ定義の
+    単一ソースとして読み込む。
+
+    スタッフマスタは曜日固定の週次休暇（vacations）を持たない（日付単位の
+    休暇は月次入力ファイル側の HC-004 判定でのみ使用されるため、週次モデル
+    専用の `staff.vacations` は空のままでよい）。
+    """
+    try:
+        rows = _load_staff_master(path)
+    except StaffValidationError as exc:
+        raise ConfigError(str(exc)) from exc
+
+    members = tuple(
+        Staff(
+            name=str(row["name"]),
+            employment=str(row["employment"]),
+            weekly_workdays=int(row["weekly_workdays"]),
+            skills={key: int(row[key]) for key in _STAFF_MASTER_SKILL_KEYS},
+            vacations=(),
+        )
+        for row in rows
+    )
+    if len({m.name for m in members}) != len(members):
+        raise ConfigError("staff の name が重複しています")
+    return members
+
+
 def _load_clinic_hours(raw: dict) -> dict[str, dict[str, TimeRange | None]]:
     hours: dict[str, dict[str, TimeRange | None]] = {}
     for weekday in WEEKDAYS:
@@ -297,8 +329,17 @@ def _load_clinic_hours(raw: dict) -> dict[str, dict[str, TimeRange | None]]:
     return hours
 
 
-def load_config(path: str | Path) -> Config:
-    """YAML 設定ファイルを読み込み、検証済みの Config を返す。"""
+def load_config(path: str | Path, staff_path: str | Path | None = None) -> Config:
+    """YAML 設定ファイルを読み込み、検証済みの Config を返す。
+
+    `staff_path` を指定した場合、スタッフ定義は staff.yaml
+    （P7-2 スタッフ管理画面が経由する staff_repository, schema_version: 2）を
+    単一ソースとして読み込み、本設定ファイル（clinic.yaml）側の `staff:`
+    セクションは無視する。これにより、管理者 UI からの編集がシフト生成
+    エンジンへ反映される（🚨#31: 二重データソース問題の解消）。
+    `staff_path` 省略時は従来どおり本設定ファイルの `staff:` セクションを
+    読み込む（週次モデル・独自スキーマ検証用の後方互換）。
+    """
     path = Path(path)
     if not path.is_file():
         raise ConfigError(f"設定ファイルが見つかりません: {path}")
@@ -355,7 +396,10 @@ def load_config(path: str | Path) -> Config:
         _require(raw, "shift_patterns", "設定"), work_rules, slot_minutes
     )
     areas = _load_areas(_require(raw, "areas", "設定"), slot_minutes)
-    staff = _load_staff(_require(raw, "staff", "設定"))
+    if staff_path is not None:
+        staff = _load_staff_from_master(staff_path)
+    else:
+        staff = _load_staff(_require(raw, "staff", "設定"))
 
     config = Config(
         work_rules=work_rules,

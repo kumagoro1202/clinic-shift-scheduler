@@ -116,6 +116,20 @@ clinic_hours:
 総合対応力）に対応する。「スコア 0 = 配置不可、1 以上 = 配置可能」の資格フラグに加え、
 SC-001（P6-4）でスコアの大小を用いたスキルバランス最適化（ソフト制約）に使用する。
 
+### スタッフデータソースの統合（P7-2 以降）
+
+P7-2 でスタッフマスタ専用ファイル `staff.yaml`（schema_version: 2。
+`scheduler.staff_repository` が読込・保存を担う。フィールドは
+`name` / `employment` / `weekly_workdays` / `skills`。上記 `vacations` は
+持たない）が導入された。管理者 UI（スタッフ管理画面）からの編集は
+`staff.yaml` に対して行われるため、`config_loader.load_config(path,
+staff_path=...)` で `staff_path` を指定すると、本ファイルの `staff:`
+セクションを無視し `staff.yaml` を単一ソースとしてスタッフ定義を読み込む
+（P7-4 シフト生成画面・CLI の実運用経路はこちらを使用する）。
+`staff_path` 省略時は従来どおり本ファイルの `staff:` セクション
+（`vacations` を含む週次固定休暇スキーマ）を読み込む（週次モデル
+`engine.run` 等の後方互換経路）。
+
 ## 制約エンジンとの対応（実装済みのハード制約・ソフト制約）
 
 | ID | 内容 | 参照する設定 |
