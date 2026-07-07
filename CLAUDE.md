@@ -153,4 +153,4 @@ python3 -m venv .venv
 - 依存パッケージは **`requirements.txt` で一元管理**する（pip 直接インストールで
   済ませて requirements.txt への記載を忘れることを禁止）
 - 新規依存の追加は PR で行い、追加理由を PR 本文に明記する
-- 依存は最小限に保つ（現行: ortools / pyyaml / pytest 系のみ）
+- 依存は最小限に保つ（現行: ortools / pyyaml / pytest 系 / streamlit）
