@@ -30,6 +30,7 @@ def main() -> None:
         st.Page("pages/vacation_input.py", title="休暇入力"),
         st.Page("pages/shift_generation.py", title="シフト生成"),
         st.Page("pages/shift_editing.py", title="シフト編集"),
+        st.Page("pages/shift_export.py", title="Excel 出力"),
     ]
     st.navigation(pages).run()
 

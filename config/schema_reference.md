@@ -19,6 +19,7 @@ clinic_hours: { ... }    # 曜日別の診療時間（参考情報）
 shift_patterns: [ ... ]  # 勤務パターン
 areas: [ ... ]           # 業務エリアと必要人数
 staff: [ ... ]           # スタッフ定義
+output: { ... }          # 出力（Excel）の表示設定。省略可
 ```
 
 ## work_rules（勤務体系）
@@ -129,6 +130,33 @@ staff_path=...)` で `staff_path` を指定すると、本ファイルの `staff
 `staff_path` 省略時は従来どおり本ファイルの `staff:` セクション
 （`vacations` を含む週次固定休暇スキーマ）を読み込む（週次モデル
 `engine.run` 等の後方互換経路）。
+
+## output（Excel 出力の勤務記号。P7-6）
+
+Q-07（勤務表記号体系）が未確定のため、勤務表（Excel 出力）の記号は
+以下を仮デフォルトとし、`output.symbols` で上書きできる（省略時はデフォルト値）。
+回答確定後は本設定の更新のみで反映できる（`exporters/excel_exporter.py` の
+コード変更不要）。
+
+```yaml
+output:
+  symbols:
+    patterns: { early: "早", late: "遅", half: "半" } # 勤務パターン名 -> 表示記号
+    vacation_full: "休"  # 終日休暇
+    vacation_am: "前"    # 午前休
+    vacation_pm: "後"    # 午後休
+    vacation_paid: "有"  # 有給休暇（`paid: true`。kind 別の記号より優先）
+    none: "／"           # 休診日・配置なし
+```
+
+| キー | 型 | 説明 | 初期値 |
+|------|-----|------|--------|
+| `symbols.patterns` | map | 勤務パターン名（`shift_patterns[].name`）→ 表示記号 | `{early: 早, late: 遅, half: 半}` |
+| `symbols.vacation_full` | str | 終日休暇（`kind: full`・非有給）の記号 | 休 |
+| `symbols.vacation_am` | str | 午前休（`kind: am`）の記号 | 前 |
+| `symbols.vacation_pm` | str | 午後休（`kind: pm`）の記号 | 後 |
+| `symbols.vacation_paid` | str | 有給休暇（`paid: true`）の記号。`kind` 別の記号より優先 | 有 |
+| `symbols.none` | str | 休診日・配置なしの記号 | ／ |
 
 ## 制約エンジンとの対応（実装済みのハード制約・ソフト制約）
 
