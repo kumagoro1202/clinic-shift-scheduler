@@ -71,7 +71,9 @@ def test_shift_generation_feasible_shows_result_table(feasible_env):
     at = AppTest.from_file(str(PAGE_PATH))
     at.run(timeout=15)
 
-    at.button[0].click().run(timeout=30)
+    # CI の共有ランナーは遅く、OR-Tools の求解（時間上限は engine 側で
+    # DEFAULT_TIME_LIMIT_SECONDS=55秒）に加えて AppTest の再実行分の余裕を見込む。
+    at.button[0].click().run(timeout=90)
 
     assert not at.exception
     assert at.success
@@ -98,7 +100,9 @@ def test_shift_generation_infeasible_shows_hints(infeasible_env):
     at = AppTest.from_file(str(PAGE_PATH))
     at.run(timeout=15)
 
-    at.button[0].click().run(timeout=30)
+    # CI の共有ランナーは遅く、OR-Tools の求解（時間上限は engine 側で
+    # DEFAULT_TIME_LIMIT_SECONDS=55秒）に加えて AppTest の再実行分の余裕を見込む。
+    at.button[0].click().run(timeout=90)
 
     assert not at.exception
     assert at.error
