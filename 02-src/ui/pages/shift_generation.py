@@ -1,7 +1,9 @@
-"""シフト生成・結果表示画面（P7-4）。
+"""シフト生成・結果表示画面（P7-4・P7-7）。
 
 FR-03: 対象月・最適化モードを指定して生成実行し、結果を表形式で表示する。
 INFEASIBLE 時は `scheduler.infeasible_hints` による要因の手がかりを表示する。
+FR-07: `weekly_hours_check` が有効な場合、生成結果に対して週40時間超過の
+警告を表示する（SC-003。強制ブロックはしない。P7-7）。
 
 データソースは scheduler.config_loader（診療所設定）と scheduler.calendar /
 scheduler.engine（月次入力・生成エンジン）。対象月は月次入力ファイル
@@ -32,6 +34,7 @@ from scheduler.infeasible_hints import (
     compute_headcount_deficit_hints,
     compute_vacation_concentration_hints,
 )
+from scheduler.result import validate_hard_constraints
 
 # テスト（AppTest）から一時ファイルへ差し替えるための環境変数オーバーライド。
 _CONFIG_PATH_ENV = "CLINIC_CONFIG_PATH"
@@ -156,6 +159,24 @@ def render(
     calendar_days = calendar.expand_month(config, monthly)
     rows = build_rows(result["schedule"], calendar_days)
     st.dataframe(rows, width="stretch")
+
+    if config.weekly_hours_check.enabled:
+        warnings = validate_hard_constraints(
+            config, calendar_days, monthly.vacations, result["schedule"]
+        )
+        weekly_hours_warnings = [w for w in warnings if w.kind == "sc003_weekly_hours_over"]
+        st.subheader("週40時間超過警告（SC-003）")
+        if weekly_hours_warnings:
+            st.warning(f"{len(weekly_hours_warnings)} 件の週40時間超過があります。")
+            st.dataframe(
+                [
+                    {"スタッフ": w.staff_name or "-", "内容": w.detail}
+                    for w in weekly_hours_warnings
+                ],
+                width="stretch",
+            )
+        else:
+            st.success("週40時間超過はありません。")
 
 
 render()

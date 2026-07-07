@@ -1,9 +1,10 @@
-"""シフト手動編集画面（P7-5）。
+"""シフト手動編集画面（P7-5・P7-7）。
 
 FR-05: 生成結果（P7-4 のシフト生成画面が session_state に保持する結果）を
-表形式で手動編集し、ハード制約（HC-001〜004・スキル適性）違反を警告表示する。
-編集結果に違反があっても保存自体は管理者判断で可能とする（強制ブロックは
-しない。`external/output-design.md` 2 章）。
+表形式で手動編集し、ハード制約（HC-001〜004・スキル適性）違反と
+SC-003（週 40 時間上限・有効時のみ）超過を警告表示する。編集結果に
+違反があっても保存自体は管理者判断で可能とする（強制ブロックはしない。
+`external/output-design.md` 2 章）。
 
 生成結果は `shift_generation.py` が `st.session_state["shift_generation_result"]`
 に保持したものを参照する（同一ブラウザセッション内で共有される）。
@@ -105,19 +106,38 @@ def render(
 
     edited_schedule = rows_to_schedule(edited_rows)
     warnings = validate_hard_constraints(config, calendar_days, monthly.vacations, edited_schedule)
+    hc_warnings = [w for w in warnings if w.kind != "sc003_weekly_hours_over"]
+    weekly_hours_warnings = [w for w in warnings if w.kind == "sc003_weekly_hours_over"]
 
     st.subheader("ハード制約違反チェック")
-    if warnings:
-        st.warning(f"{len(warnings)} 件のハード制約違反があります（保存は可能です）。")
+    if hc_warnings:
+        st.warning(f"{len(hc_warnings)} 件のハード制約違反があります（保存は可能です）。")
         st.dataframe(
             [
                 {"種別": w.kind, "スタッフ": w.staff_name or "-", "内容": w.detail}
-                for w in warnings
+                for w in hc_warnings
             ],
             width="stretch",
         )
     else:
         st.success("ハード制約違反はありません。")
+
+    if config.weekly_hours_check.enabled:
+        st.subheader("週40時間超過警告（SC-003）")
+        if weekly_hours_warnings:
+            st.warning(
+                f"{len(weekly_hours_warnings)} 件の週40時間超過があります"
+                "（保存は可能です）。"
+            )
+            st.dataframe(
+                [
+                    {"スタッフ": w.staff_name or "-", "内容": w.detail}
+                    for w in weekly_hours_warnings
+                ],
+                width="stretch",
+            )
+        else:
+            st.success("週40時間超過はありません。")
 
     if st.button("保存", type="primary"):
         st.session_state[RESULT_KEY] = {**result, "schedule": edited_schedule}

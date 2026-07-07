@@ -47,13 +47,17 @@ def validate_hard_constraints(
     vacations: tuple[DateVacation, ...],
     schedule: dict,
 ) -> list[Warning]:
-    """スケジュール（生成結果または手動編集後）がハード制約に違反していないかを検証する。
+    """スケジュール（生成結果または手動編集後）がハード制約に違反していないか、
+    および SC-003（週 40 時間上限、有効時のみ）を超過していないかを検証する。
 
     検証対象: HC-001（必要人数）・HC-002（同一時刻の複数エリア配置）・
     HC-003（パターン時間内・実働時間・休憩・週勤務日数上限）・
-    HC-004（休暇時間帯への配置）・配置エリアへのスキル適性。
+    HC-004（休暇時間帯への配置）・配置エリアへのスキル適性・
+    SC-003（週実働時間の上限。`config.weekly_hours_check.enabled` が真の場合のみ）。
     強制ブロックはしない設計のため、違反があっても保存自体は呼び出し側の
-    判断に委ねる（`external/output-design.md` 2 章）。
+    判断に委ねる（`external/output-design.md` 2 章）。SC-003 は元々ソフト制約
+    であり、CONSTRAINTS.md 3 章の確定判断により警告表示のみとする
+    （FR-07: 有効時はシフト生成結果に対して超過警告を表示する）。
     """
     warnings: list[Warning] = []
     weekday_by_date = {d.date: d.weekday for d in calendar_days}
@@ -63,6 +67,7 @@ def validate_hard_constraints(
     pattern_by_name = {p.name: p for p in config.shift_patterns}
 
     weekly_workdays: dict[tuple[str, str], int] = {}
+    weekly_minutes: dict[tuple[str, str], int] = {}
 
     for date_str, day_entries in schedule.items():
         for staff_name, entry in day_entries.items():
@@ -148,6 +153,11 @@ def validate_hard_constraints(
                     )
                 )
 
+            if config.weekly_hours_check.enabled and work_minutes:
+                week_key = _iso_week_key(date_str)
+                minutes_key = (staff_name, week_key)
+                weekly_minutes[minutes_key] = weekly_minutes.get(minutes_key, 0) + work_minutes
+
             if pattern.break_minutes > 0 and not break_range:
                 warnings.append(
                     Warning(
@@ -220,5 +230,19 @@ def validate_hard_constraints(
                     f"を超えています（{count}日）",
                 )
             )
+
+    if config.weekly_hours_check.enabled:
+        limit_minutes = config.weekly_hours_check.limit_hours * 60
+        for (staff_name, week_key), minutes in weekly_minutes.items():
+            if minutes > limit_minutes:
+                warnings.append(
+                    Warning(
+                        "sc003_weekly_hours_over",
+                        staff_name,
+                        f"{week_key}: 週実働時間が上限"
+                        f"（{config.weekly_hours_check.limit_hours}時間）を"
+                        f"超えています（{minutes / 60:.1f}時間）",
+                    )
+                )
 
     return warnings

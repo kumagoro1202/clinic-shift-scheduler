@@ -8,8 +8,11 @@
     HC-007: 出勤(works=1)日には最低1つの配置(assign)を伴うこと（空出勤の防止）
 
 オプション制約:
-    週労働時間チェック（options.weekly_hours_check、初期 OFF）
     HC-006 厳格形・同時複数名休憩の一律禁止（options.strict_single_break、初期 OFF）
+
+SC-003（週 40 時間上限）は CP-SAT のハード制約としては実装しない。
+`scheduler.result.validate_hard_constraints` による警告表示のみで扱う
+（P7-7 確定判断。`01-docs/spec/CONSTRAINTS.md` 3 章参照）。
 
 週次モデル（曜日キー・build_model）と月次モデル（日付キー・build_monthly_model）は
 `DayContext`（日識別子の抽象）を介して制約構築コードを共通化する
@@ -148,7 +151,6 @@ def _build(
     add_hc004_vacations(sm)
     add_hc007_no_empty_attendance(sm)
     add_optional_strict_single_break(sm)
-    add_optional_weekly_hours_check(sm)
     return sm
 
 
@@ -418,28 +420,3 @@ def add_optional_strict_single_break(sm: ShiftModel) -> None:
             ]
             if len(covering) > 1:
                 sm.model.add_at_most_one(covering)
-
-
-def add_optional_weekly_hours_check(sm: ShiftModel) -> None:
-    """オプション: 週労働時間の上限チェック（初期 OFF、暦週ごとに適用）。"""
-    config = sm.config
-    check = config.weekly_hours_check
-    if not check.enabled:
-        return
-    for staff in config.staff:
-        for _, days_in_week in _days_by_week(sm.days).items():
-            keys_in_week = {d.key for d in days_in_week}
-            terms = [
-                var * _pattern_by_name(config, pattern_name).working_minutes
-                for (name, key, pattern_name), var in sm.works.items()
-                if name == staff.name and key in keys_in_week
-            ]
-            if terms:
-                sm.model.add(sum(terms) <= check.limit_hours * 60)
-
-
-def _pattern_by_name(config: Config, name: str) -> ShiftPattern:
-    for pattern in config.shift_patterns:
-        if pattern.name == name:
-            return pattern
-    raise KeyError(name)

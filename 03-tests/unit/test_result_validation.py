@@ -3,8 +3,9 @@
 `internal/data-model.md` 5 章の方針（ソルバー出力の検証と手動編集後の
 チェックを同一実装で行う）に基づく検証関数 `validate_hard_constraints` を、
 HC-001（必要人数）・HC-002（重複配置）・HC-003（パターン時間内・実働時間・
-休憩・週勤務日数上限）・HC-004（休暇時間帯への配置）・スキル適性の観点で
-検証する。実在データは使用しない。
+休憩・週勤務日数上限）・HC-004（休暇時間帯への配置）・スキル適性・
+SC-003（週 40 時間上限・有効時のみ警告表示、P7-7）の観点で検証する。
+実在データは使用しない。
 """
 
 from __future__ import annotations
@@ -69,6 +70,72 @@ staff:
     vacations: []
 """
 
+# SC-003（週40時間上限）検証用: weekly_hours_check を有効化し、上限を5時間に
+# 縮小した以外は _MINIMAL_CONFIG_YAML と同一（weekly_workdays は2日出勤を
+# 許容する値にして、hc003_over_weekly_workdays と混同しないようにする）。
+_MINIMAL_CONFIG_YAML_WEEKLY_HOURS_ENABLED = """
+schema_version: 1
+work_rules:
+  binding_hours: 8
+  break_minutes: 60
+  working_hours: 7
+  break_window: { start: "11:00", end: "14:00" }
+options:
+  weekly_hours_check:
+    enabled: true
+    limit_hours: 5
+slot_minutes: 30
+day_types:
+  mon: full
+  tue: full
+  wed: closed
+  thu: closed
+  fri: closed
+  sat: closed
+  sun: closed
+shift_patterns:
+  - name: day
+    day_types: [full]
+    start: "09:00"
+    end: "17:00"
+    break_minutes: 60
+areas:
+  - name: area_a
+    required_skills: [area_a]
+    requirements:
+      mon:
+        - { start: "09:00", end: "12:00", headcount: 1 }
+      tue: []
+      wed: []
+      thu: []
+      fri: []
+      sat: []
+      sun: []
+  - name: area_b
+    required_skills: [area_b]
+    requirements:
+      mon: []
+      tue: []
+      wed: []
+      thu: []
+      fri: []
+      sat: []
+      sun: []
+staff:
+  - name: "スタッフ1"
+    employment: full_time
+    weekly_workdays: 5
+    skills: { area_a: 50, area_b: 0 }
+    vacations: []
+"""
+
+# weekly_hours_check.enabled: false 版（上限は5時間のままだが無効化されている）。
+_MINIMAL_CONFIG_YAML_WEEKLY_HOURS_DISABLED = (
+    _MINIMAL_CONFIG_YAML_WEEKLY_HOURS_ENABLED.replace(
+        "enabled: true", "enabled: false"
+    )
+)
+
 _MON = CalendarDay(date="2026-08-03", weekday="mon", day_type="full")
 _TUE = CalendarDay(date="2026-08-04", weekday="tue", day_type="full")
 
@@ -77,6 +144,20 @@ _TUE = CalendarDay(date="2026-08-04", weekday="tue", day_type="full")
 def minimal_config(tmp_path):
     path = tmp_path / "minimal_clinic.yaml"
     path.write_text(_MINIMAL_CONFIG_YAML, encoding="utf-8")
+    return config_loader.load_config(path)
+
+
+@pytest.fixture
+def weekly_hours_enabled_config(tmp_path):
+    path = tmp_path / "weekly_hours_enabled_clinic.yaml"
+    path.write_text(_MINIMAL_CONFIG_YAML_WEEKLY_HOURS_ENABLED, encoding="utf-8")
+    return config_loader.load_config(path)
+
+
+@pytest.fixture
+def weekly_hours_disabled_config(tmp_path):
+    path = tmp_path / "weekly_hours_disabled_clinic.yaml"
+    path.write_text(_MINIMAL_CONFIG_YAML_WEEKLY_HOURS_DISABLED, encoding="utf-8")
     return config_loader.load_config(path)
 
 
@@ -168,3 +249,41 @@ def test_hc007_empty_attendance(minimal_config):
     }
     warnings = validate_hard_constraints(minimal_config, (_MON,), (), schedule)
     assert any(w.kind == "hc007_empty_attendance" for w in warnings)
+
+
+def test_sc003_weekly_hours_over_when_enabled_and_exceeded(weekly_hours_enabled_config):
+    # 月・火とも area_a に 3h（09:00-12:00）ずつ配置 = 週6h > 上限5h。
+    schedule = {
+        "2026-08-03": {"スタッフ1": _valid_entry()},
+        "2026-08-04": {"スタッフ1": _valid_entry()},
+    }
+    warnings = validate_hard_constraints(
+        weekly_hours_enabled_config, (_MON, _TUE), (), schedule
+    )
+    over_limit = [w for w in warnings if w.kind == "sc003_weekly_hours_over"]
+    assert len(over_limit) == 1
+    assert "6.0時間" in over_limit[0].detail
+    # 強制ブロックしない設計のため hc003 系の違反は発生しない
+    assert not any(w.kind.startswith("hc003") for w in warnings)
+
+
+def test_sc003_no_warning_when_within_limit(weekly_hours_enabled_config):
+    # 月のみ area_a に 3h 配置 = 週3h < 上限5h。
+    schedule = {"2026-08-03": {"スタッフ1": _valid_entry()}}
+    warnings = validate_hard_constraints(
+        weekly_hours_enabled_config, (_MON,), (), schedule
+    )
+    assert not any(w.kind == "sc003_weekly_hours_over" for w in warnings)
+
+
+def test_sc003_no_warning_when_disabled_even_if_over_hours(weekly_hours_disabled_config):
+    # weekly_hours_check.enabled=false のため、上限5hを超える週6h勤務でも
+    # SC-003 の警告は出さない（オプション機能・初期OFFの仕様通り）。
+    schedule = {
+        "2026-08-03": {"スタッフ1": _valid_entry()},
+        "2026-08-04": {"スタッフ1": _valid_entry()},
+    }
+    warnings = validate_hard_constraints(
+        weekly_hours_disabled_config, (_MON, _TUE), (), schedule
+    )
+    assert not any(w.kind == "sc003_weekly_hours_over" for w in warnings)
