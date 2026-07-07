@@ -1,0 +1,32 @@
+# =============================================================================
+# サンプルスタッフマスタ（テスト専用・架空データ）
+# -----------------------------------------------------------------------------
+# 本ファイルはP7-2管理者UI（スタッフ管理画面）の動作確認専用サンプルである。
+# スタッフは全員架空（スタッフA〜E）であり、実在の個人・施設とは無関係。
+# sample_clinic.yaml の staff セクションと同一構成（縦スライスのテストと
+# 整合させるため）。スキーマの定義は external/input-design.md 4 章を参照。
+# =============================================================================
+
+schema_version: 2
+
+staff:
+  - name: "スタッフA"
+    employment: full_time
+    weekly_workdays: 6
+    skills: { rehab: 70, reception_am: 80, reception_pm: 80, general: 85 }
+  - name: "スタッフB"
+    employment: full_time
+    weekly_workdays: 6
+    skills: { rehab: 0, reception_am: 90, reception_pm: 85, general: 75 }
+  - name: "スタッフC"
+    employment: full_time
+    weekly_workdays: 5
+    skills: { rehab: 90, reception_am: 0, reception_pm: 0, general: 70 }
+  - name: "スタッフD"
+    employment: part_time
+    weekly_workdays: 5
+    skills: { rehab: 75, reception_am: 60, reception_pm: 65, general: 60 }
+  - name: "スタッフE"
+    employment: part_time
+    weekly_workdays: 5
+    skills: { rehab: 0, reception_am: 70, reception_pm: 75, general: 65 }

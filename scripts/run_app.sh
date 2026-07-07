@@ -10,4 +10,7 @@ if [ ! -x ".venv/bin/python" ]; then
     .venv/bin/python -m pip install -r requirements.txt
 fi
 
-.venv/bin/python -m streamlit run 02-src/ui/app.py
+# PYTHONPATH に 02-src を追加する（ui/ 配下から scheduler 等を import するため。
+# 03-tests/conftest.py と同じ sys.path 構成に合わせる。P7-2 で ui/pages が
+# scheduler.staff_repository を import するようになったため必須）。
+PYTHONPATH="$(pwd)/02-src${PYTHONPATH:+:$PYTHONPATH}" .venv/bin/python -m streamlit run 02-src/ui/app.py

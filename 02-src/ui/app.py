@@ -1,8 +1,11 @@
-"""管理者 UI エントリポイント（P7-1: Streamlit スケルトン）。
+"""管理者 UI エントリポイント（P7-1: Streamlit スケルトン / P7-2 以降: 画面追加）。
 
 ARCHITECTURE.md 5 章のモジュール分割方針に基づくエントリポイント。
-個別画面（スタッフ管理・休暇入力・シフト生成・結果編集）は
-`ui/pages/` 配下に P7-2 以降で追加する。本ファイルは骨格のみを持つ。
+個別画面は `ui/pages/` 配下のスクリプトとして実装し、`st.navigation` +
+`st.Page`（ファイルパス方式）によるマルチページ構成でここから結線する
+（軍師申し送り: st.Page 方式を採用。ファイルパス方式は AppTest.switch_page
+による画面単位のテスタビリティを公式にサポートしており、AppTest 側が
+callable 方式のページ切替に未対応な現状（Streamlit 1.59 時点）と整合する）。
 """
 
 from __future__ import annotations
@@ -12,15 +15,24 @@ import streamlit as st
 APP_TITLE = "クリニック シフト作成システム"
 
 
-def render() -> None:
-    """アプリのトップ画面を描画する。"""
-    st.set_page_config(page_title=APP_TITLE, layout="wide")
+def render_home() -> None:
+    """トップ画面（ホーム）を描画する。"""
     st.title(APP_TITLE)
     st.caption("管理者向けシフト作成・編集システム")
     st.info(
-        "スタッフ管理・休暇入力・シフト生成・結果編集などの画面は、"
-        "今後のフェーズ（P7-2 以降）で `ui/pages/` に追加されます。"
+        "左のナビゲーションから各画面を選択してください。"
+        "休暇入力・シフト生成・結果編集などの画面は、"
+        "今後のフェーズ（P7-3 以降）で追加されます。"
     )
 
 
-render()
+def main() -> None:
+    st.set_page_config(page_title=APP_TITLE, layout="wide")
+    pages = [
+        st.Page(render_home, title="ホーム", default=True),
+        st.Page("pages/staff_management.py", title="スタッフ管理"),
+    ]
+    st.navigation(pages).run()
+
+
+main()

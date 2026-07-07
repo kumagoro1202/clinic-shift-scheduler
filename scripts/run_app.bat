@@ -10,6 +10,10 @@ if not exist ".venv\Scripts\python.exe" (
     .venv\Scripts\python.exe -m pip install -r requirements.txt
 )
 
+REM PYTHONPATH に 02-src を追加する（ui\ 配下から scheduler 等を import するため。
+REM 03-tests\conftest.py と同じ sys.path 構成に合わせる。P7-2 で ui\pages が
+REM scheduler.staff_repository を import するようになったため必須）。
+set "PYTHONPATH=%CD%\02-src;%PYTHONPATH%"
 .venv\Scripts\python.exe -m streamlit run 02-src\ui\app.py
 
 pause
