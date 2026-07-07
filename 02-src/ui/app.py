@@ -21,8 +21,8 @@ def render_home() -> None:
     st.caption("管理者向けシフト作成・編集システム")
     st.info(
         "左のナビゲーションから各画面を選択してください。"
-        "休暇入力・シフト生成・結果編集などの画面は、"
-        "今後のフェーズ（P7-3 以降）で追加されます。"
+        "シフト生成・結果編集などの画面は、"
+        "今後のフェーズ（P7-4 以降）で追加されます。"
     )
 
 
@@ -31,6 +31,7 @@ def main() -> None:
     pages = [
         st.Page(render_home, title="ホーム", default=True),
         st.Page("pages/staff_management.py", title="スタッフ管理"),
+        st.Page("pages/vacation_input.py", title="休暇入力"),
     ]
     st.navigation(pages).run()
 
