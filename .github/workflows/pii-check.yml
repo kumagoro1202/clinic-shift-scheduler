@@ -8,7 +8,7 @@ jobs:
   pii-scan:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # 検知自己テスト（canary test）: 疑似PIIをスキャナが検知できることを先に実証する。
       # スキャナが壊れている（パターン不一致・CRLF混入等）場合はここで CI が fail する。
