@@ -1,4 +1,4 @@
-ortools>=9.10
+ortools>=9.15.6755
 pyyaml>=6.0.3
 pytest>=8.0
 streamlit>=1.59.1
