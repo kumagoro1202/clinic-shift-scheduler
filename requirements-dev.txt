@@ -4,5 +4,5 @@ pytest-cov>=7.0
 ruff>=0.15.21
 # E2E（P7-8。ARCHITECTURE.md 6章）
 playwright>=1.48
-pytest-playwright>=0.5
+pytest-playwright>=0.8.0
 pytest-rerunfailures>=14.0
