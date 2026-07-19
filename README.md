@@ -63,9 +63,11 @@ clinic-shift-scheduler/
 │   ├── ONBOARDING.md            # 新規参画者向けガイド
 │   └── RELEASE_NOTES.md         # リリースノート
 │
-├── 02-src/                      # 実装（言語選定後に更新）
-│   ├── backend/
-│   └── frontend/
+├── 02-src/                      # 実装（Python 3.12 / ADR-008）
+│   ├── cli.py                   # シフト生成CLI（バッチ実行用）
+│   ├── scheduler/               # 最適化エンジン（OR-Tools CP-SAT）・設定読込
+│   ├── exporters/               # CSV / Excel 出力
+│   └── ui/                      # 管理者UI（Streamlit マルチページ）
 │
 ├── 03-tests/                    # テスト
 │   ├── unit/                    # ユニットテスト
