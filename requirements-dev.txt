@@ -1,7 +1,7 @@
 # 開発用依存パッケージ（テスト・lint）。実行時依存は requirements.txt を参照。
 -r requirements.txt
 pytest-cov>=7.0
-ruff>=0.15.21
+ruff>=0.16.0
 # E2E（P7-8。ARCHITECTURE.md 6章）
 playwright>=1.48
 pytest-playwright>=0.8.0
